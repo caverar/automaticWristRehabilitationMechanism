@@ -38,8 +38,6 @@
 
 /* Implementation ------------------------------------------------------------*/
 
-
-
 /* AO Class Constructor ------------------------------------------------------*/
 /**
  * @brief This function implements the initialization of the AO, and is the 
@@ -51,8 +49,13 @@
  */
 void BlinkyButton_ctor(BlinkyButton * const this){
     Active_ctor(&this->super, (DispatchHandler)&BlinkyButton_dispatch);
-    TimeEvent_ctor(&this->te, TIMEOUT_SIG, &this->super);
     
+    // Time events construction
+    TimeEvent_ctor(&this->te, BLINKY_AO_TIMEOUT_SIG, &this->super);
+    
+    // State Machine initialization
+    this->state = BLINKY_AO_START_ST;
+
     // private data initialization
     this->isLedOn = false;
 
@@ -76,45 +79,57 @@ void BlinkyButton_ctor(BlinkyButton * const this){
  */
 static void BlinkyButton_dispatch(BlinkyButton * const this, 
                                   Event const * const e){
-    switch (e->sig) {
-        case INIT_SIG:      // This event is always excuted at the beginning.
-        case TIMEOUT_SIG: { // Time trigger event
-            //static PRINTER_EVENT_TEXT buttonPressedEvt;
-            
+    // Initial event
+    if(e->sig == INIT_SIG){
+        // Initilization
 
-            static PRINTER_EVENT_TEXT const print_text_event = 
-                        {TEXT, "Hola desde el otro mundo\n"};
+        // Button press simulation to avoid connect physical button for test 
+        // purposes, by triggering event
+        // const Event button_pressed_event = {BLINKY_AO_BUTTON_PRESSED_SIG};
+        // Active_post(AO_blinkyButton, (const Event*)&button_pressed_event);
+    }
 
+    // State Machine 
+    switch(this->state){
+        case BLINKY_AO_START_ST:{
+            switch (e->sig){
+                case BLINKY_AO_BUTTON_PRESSED_SIG:{
+                    this->state = BLINKY_AO_BLINKING_ST;
+                    TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
+                    break;
+                }default:
+                    break;                
+            }
+            break;
+
+        }case BLINKY_AO_BLINKING_ST:{
+            // message to anothers active object
+            static PRINTER_AO_TEXT_PL const print_text_event = 
+                {PRINTER_AO_TEXT_SIG, "Hola desde el otro mundo\n"};
             Active_post(AO_printer, (const Event*)&print_text_event);
 
-            if (!this->isLedOn) { /* LED not on */
-                gpio_put(LED_PIN, 1);
-                gpio_put(TEST_PIN, 1);
-                this->isLedOn = true;
-                TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
-            }
-            else {  /* LED is on */
-                gpio_put(LED_PIN, 0);
-                gpio_put(TEST_PIN, 0);
-                this->isLedOn = false;
-                TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
+            switch (e->sig){
+                case BLINKY_AO_TIMEOUT_SIG:{
+                    if(!this->isLedOn){ /* LED not on */
+                        gpio_put(LED_PIN, 1);
+                        gpio_put(TEST_PIN, 1);
+                        this->isLedOn = true;
+                        TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
+                    }else{  /* LED is on */
+                        gpio_put(LED_PIN, 0);
+                        gpio_put(TEST_PIN, 0);
+                        this->isLedOn = false;
+                        TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
+                    }
+                    break;
+                }default:
+                    break;
             }
             break;
-        }
-        // case BUTTON_PRESSED_SIG: {
-        //     BSP_led1_on();
-        //     break;
-        // }
-        // case BUTTON_RELEASED_SIG: {
-        //     BSP_led1_off();
-        //     break;
-        // }
-        default: {
+
+        }default:
             break;
-        }
     }
 }
-
-
 
 /************************ Camilo Vera **************************END OF FILE****/

@@ -11,12 +11,20 @@
 //#include "hardware/uart.h"
 //#include "hardware/gpio.h"
 
+// FreeAct
+#include <FreeAct.h>
+// External AO calls
+extern Active *AO_printer;
+extern Active *AO_blinkyButton;
+
+// Global defines
 
 #define LED_PIN PICO_DEFAULT_LED_PIN
 #define TEST_PIN 15
+#define BUTTON_PIN 14
 
 
-// void BSP_init(void);
+void BSP_init(void);
 // void BSP_start(void);
 // void BSP_led0_on(void);
 // void BSP_led0_off(void);

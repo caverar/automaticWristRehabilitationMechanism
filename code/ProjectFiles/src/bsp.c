@@ -1,5 +1,34 @@
-#include "FreeAct.h" /* Free Active Object interface */
 #include "bsp.h"
+
+// Standard C libraries
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+// SDK Libraries
+#include "pico/stdlib.h"
+//#include "hardware/uart.h"
+//#include "hardware/gpio.h"
+
+
+// FreeAct
+#include <FreeAct.h>
+// Active Objects
+#include "blinky_AO.h"
+#include "printer_AO.h"
+// External AO calls
+extern Active *AO_printer;
+extern Active *AO_blinkyButton;
+
+
+void BSP_init(void){
+    // GPIO 15
+
+    gpio_init(BUTTON_PIN);
+    gpio_set_dir(BUTTON_PIN, GPIO_IN);
+
+
+}
 
 
 /* Hooks ===================================================================*/
@@ -44,6 +73,11 @@ void vApplicationTickHook(void) {
     //                              &xHigherPriorityTaskWoken);
     //     }
     // }
+
+    if(gpio_get(BUTTON_PIN)){
+        const Event button_pressed_event = {BLINKY_AO_BUTTON_PRESSED_SIG};
+        Active_post(AO_blinkyButton, (const Event*)&button_pressed_event);
+    }
 
     /* notify FreeRTOS to perform context switch from ISR, if needed */
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);

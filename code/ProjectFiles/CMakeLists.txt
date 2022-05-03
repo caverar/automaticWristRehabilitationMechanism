@@ -1,5 +1,5 @@
 # Set name of project (as PROJECT_NAME) and C/C++ Standards
-project(wristRehabMechanism C CXX ASM)
+project(freeact-test C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 

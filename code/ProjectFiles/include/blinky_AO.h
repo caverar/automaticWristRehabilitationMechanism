@@ -32,11 +32,10 @@ extern "C" {
 
 /* External AO calls --- -----------------------------------------------------*/
 extern Active *AO_printer;
-
+extern Active *AO_blinkyButton;
 
 /* Constants definitions -----------------------------------------------------*/
-// const uint LED_PIN = PICO_DEFAULT_LED_PIN;
-// const uint TEST_PIN = 15;
+
 
 /* AO Class input Signals ----------------------------------------------------*/
 
@@ -46,18 +45,22 @@ extern Active *AO_printer;
  */
 
 enum Signals {
-    TIMEOUT_SIG = USER_SIG,     // First Signal always must replace USER_SIG
-    BUTTON_PRESSED_SIG,
-    BUTTON_RELEASED_SIG,
+    BLINKY_AO_TIMEOUT_SIG = USER_SIG,    // First Signals must replace USER_SIG
+    // User Signals
+    BLINKY_AO_BUTTON_PRESSED_SIG
 };
 
 
 /* AO Class Data -------------------------------------------------------------*/
 typedef struct {
     Active super;               // Inherit from Active Object base class
+
     TimeEvent te;               // Add TimeEvent to the AO
     /* add private data (local variables) for the AO... */
-
+    enum{
+        BLINKY_AO_START_ST,
+        BLINKY_AO_BLINKING_ST
+    }state;
     bool isLedOn;               // Led State
 } BlinkyButton;
 

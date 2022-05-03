@@ -47,11 +47,11 @@
  */
 void Printer_ctor(Printer * const this){
     Active_ctor(&this->super, (DispatchHandler)&Printer_dispatch);
-    TimeEvent_ctor(&this->te, PRINTER_TIMEOUT_SIG, &this->super);
+    TimeEvent_ctor(&this->te, PRINTER_AO_TIMEOUT_SIG, &this->super);
 
     stdio_init_all();
 }
-    
+
 
 
 /* AO Class execution callback -----------------------------------------------*/
@@ -67,14 +67,14 @@ static void Printer_dispatch(Printer * const this,
                                   Event const * const e){
     switch (e->sig) {
         case INIT_SIG:      // This event is always excuted at the beginning.
-        case PRINTER_TIMEOUT_SIG: { // Time trigger event
+        case PRINTER_AO_TIMEOUT_SIG: { // Time trigger event
 
             printf("Hola mundo\n");
             TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
             break;
         }
-        case TEXT: {
-            printf(((const PRINTER_EVENT_TEXT*)e)->string_buffer);
+        case PRINTER_AO_TEXT_SIG: {
+            printf(((const PRINTER_AO_TEXT_PL*)e)->string_buffer);
         }
 
         default: {

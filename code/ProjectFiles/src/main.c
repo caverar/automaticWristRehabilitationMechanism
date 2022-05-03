@@ -62,6 +62,7 @@ Active *AO_printer = &printer.super;
 
 
 int main(){
+    BSP_init();
     stdio_init_all();
 
     /* create and start the BlinkyButton AO */

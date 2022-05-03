@@ -45,12 +45,12 @@ extern "C" {
 typedef struct{
     Event super;                // Inherit from event
     char* string_buffer;        // Buffer
-} PRINTER_EVENT_TEXT;
+}PRINTER_AO_TEXT_PL;
 
 
 enum printer_Signals{
-    PRINTER_TIMEOUT_SIG = USER_SIG,     // First Signal always must replace USER_SIG
-    TEXT
+    PRINTER_AO_TIMEOUT_SIG = USER_SIG,     // First Signal always must replace USER_SIG
+    PRINTER_AO_TEXT_SIG
 };
 
 
@@ -61,7 +61,7 @@ typedef struct {
     TimeEvent te;               // Add TimeEvent to the AO
     /* add private data (local variables) for the AO... */
 
-} Printer;
+}Printer;
 
 
 /* AO Class execution callback -----------------------------------------------*/
