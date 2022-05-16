@@ -7,6 +7,7 @@
 
 // SDK Libraries
 #include "pico/stdlib.h"
+#include "hardware/adc.h"
 //#include "hardware/uart.h"
 //#include "hardware/gpio.h"
 
@@ -22,14 +23,72 @@ extern Active *AO_blinkyButton;
 
 
 void BSP_init(void){
-    // GPIO 15
 
+    // GPIO 15
     gpio_init(BUTTON_PIN);
     gpio_set_dir(BUTTON_PIN, GPIO_IN);
-
-
+    
+    // ADC buttons 
+    adc_init();
+    adc_set_clkdiv(4799);  //10Ks/s
+    // Initialize ADC pin
+    adc_gpio_init(28);
+    adc_select_input(2);
+    adc_run(true);
+    
+    buttons_past_states = 0x00;
+    buttons_states = 0x00;
+    buttons_levels[0] = 0;
+    buttons_levels[1] = 0;
+    buttons_levels[2] = 0;
+    buttons_levels[3] = 0;
+    buttons_levels[4] = 0;
 }
 
+
+bool sw_debounce(bool current_state, u_int16_t* level){
+
+    if(current_state){  // load and discharge of software capacitor 
+        *level = (*level >= DEBOUNCE_HIGH_LEVEL) ? DEBOUNCE_HIGH_LEVEL : *level+1;
+    }else{
+        *level = 0;
+    }
+    return *level >= DEBOUNCE_HIGH_LEVEL;
+}
+
+void debounce_all(uint16_t adc_val,
+                  uint16_t* buttons_levels,
+                  uint8_t* buttons_states){ 
+    
+    if(SW1_MIN_VAL<adc_val && adc_val<SW1_MAX_VAL){
+        *buttons_states &= ~(0x01<<0);
+        *buttons_states |= (0x01 && sw_debounce(true, &buttons_levels[0]))<<0;
+
+    }else if(SW2_MIN_VAL<adc_val && adc_val<SW2_MAX_VAL){
+        *buttons_states &= ~(0x01<<1);
+        *buttons_states |= (0x01 && sw_debounce(true, &buttons_levels[1]))<<1;
+
+    }else if(SW3_MIN_VAL<adc_val && adc_val<SW3_MAX_VAL){
+        *buttons_states &= ~(0x01<<2);
+        *buttons_states |= (0x01 && sw_debounce(true, &buttons_levels[2]))<<2;
+
+    }else if(SW4_MIN_VAL<adc_val && adc_val<SW4_MAX_VAL){
+        *buttons_states &= ~(0x01<<3);
+        *buttons_states |= (0x01 && sw_debounce(true, &buttons_levels[3]))<<3;
+
+    }else if(SW5_MIN_VAL<adc_val && adc_val<SW5_MAX_VAL){
+        *buttons_states &= ~(0x01<<4);
+        *buttons_states |= (0x01 && sw_debounce(true, &buttons_levels[4]))<<4;
+
+    }else{
+        *buttons_states = 0x00;
+        *buttons_states |= (0x01 && sw_debounce(false, &buttons_levels[0]))<<0;
+        *buttons_states |= (0x01 && sw_debounce(false, &buttons_levels[1]))<<1;
+        *buttons_states |= (0x01 && sw_debounce(false, &buttons_levels[2]))<<2;
+        *buttons_states |= (0x01 && sw_debounce(false, &buttons_levels[3]))<<3;
+        *buttons_states |= (0x01 && sw_debounce(false, &buttons_levels[4]))<<4;
+    }
+}
 
 /* Hooks ===================================================================*/
 /* Application hooks used in this project ==================================*/
@@ -37,47 +96,56 @@ void BSP_init(void){
 void vApplicationTickHook(void) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    // /* state of the button debouncing, see below */
-    // static struct ButtonsDebouncing {
-    //     uint32_t depressed;
-    //     uint32_t previous;
-    // } buttons = { 0U, 0U };
-    // uint32_t current;
-    // uint32_t tmp;
+
 
     /* perform clock tick processing */
     TimeEvent_tickFromISR(&xHigherPriorityTaskWoken);
 
-    // /* Perform the debouncing of buttons. The algorithm for debouncing
-    // * adapted from the book "Embedded Systems Dictionary" by Jack Ganssle
-    // * and Michael Barr, page 71.
-    // */
-    // current = ~GPIOF_AHB->DATA_Bits[BTN_SW1]; /* read SW1 */
-    // tmp = buttons.depressed; /* save the debounced depressed buttons */
-    // buttons.depressed |= (buttons.previous & current); /* set depressed */
-    // buttons.depressed &= (buttons.previous | current); /* clear released */
-    // buttons.previous   = current; /* update the history */
-    // tmp ^= buttons.depressed;     /* changed debounced depressed */
+    
+    debounce_all(adc_hw->result, buttons_levels, &buttons_states);
 
-    // if ((tmp & BTN_SW1) != 0U) {  /* debounced SW1 state changed? */
-    //     if ((buttons.depressed & BTN_SW1) != 0U) { /* is SW1 depressed? */
-    //         /* post the "button-pressed" event from ISR */
-    //         static Event const buttonPressedEvt = {BUTTON_PRESSED_SIG};
-    //         Active_postFromISR(AO_blinkyButton, &buttonPressedEvt,
-    //                            &xHigherPriorityTaskWoken);
-    //     }
-    //     else { /* the button is released */
-    //          /* post the "button-released" event from ISR */
-    //          static Event const buttonReleasedEvt = {BUTTON_RELEASED_SIG};
-    //          Active_postFromISR(AO_blinkyButton, &buttonReleasedEvt,
-    //                              &xHigherPriorityTaskWoken);
-    //     }
-    // }
 
-    if(gpio_get(BUTTON_PIN)){
-        const Event button_pressed_event = {BLINKY_AO_BUTTON_PRESSED_SIG};
-        Active_post(AO_blinkyButton, (const Event*)&button_pressed_event);
+
+    switch(buttons_states & ~buttons_past_states){
+        case 0x01:{
+            static Event const sw1PressedEvt = {BLINKY_AO_SW1_PRESSED_SIG};
+            Active_postFromISR(AO_blinkyButton, &sw1PressedEvt,
+                               &xHigherPriorityTaskWoken);
+            break;
+        }
+        case 0x02:{
+            static Event const sw2PressedEvt = {BLINKY_AO_SW2_PRESSED_SIG};
+            Active_postFromISR(AO_blinkyButton, &sw2PressedEvt,
+                               &xHigherPriorityTaskWoken);
+            break;
+        }
+        case 0x04:{
+            static Event const sw3PressedEvt = {BLINKY_AO_SW3_PRESSED_SIG};
+            Active_postFromISR(AO_blinkyButton, &sw3PressedEvt,
+                               &xHigherPriorityTaskWoken);
+            break;
+        }
+        case 0x08:{
+            static Event const sw4PressedEvt = {BLINKY_AO_SW4_PRESSED_SIG};
+            Active_postFromISR(AO_blinkyButton, &sw4PressedEvt,
+                               &xHigherPriorityTaskWoken);
+            break;
+        }
+        case 0x10:{
+            static Event const sw5PressedEvt = {BLINKY_AO_SW5_PRESSED_SIG};
+            Active_postFromISR(AO_blinkyButton, &sw5PressedEvt,
+                               &xHigherPriorityTaskWoken);
+            break;
+        }
+        default:
+            break;
     }
+
+    buttons_past_states = buttons_states;
+
+
+
+
 
     /* notify FreeRTOS to perform context switch from ISR, if needed */
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);

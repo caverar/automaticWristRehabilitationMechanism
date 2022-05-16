@@ -3,7 +3,7 @@
   * @file    blinky_AO.c
   * @author  Camilo Vera
   * @brief   blinky active object
-  *          This file constainst an implentation example of an active object
+  *          This file constainst an implementation example of an active object
   *          using FreeAct over FreeRTOS 
   ****************************************************************************** 
 */
@@ -64,7 +64,6 @@ void BlinkyButton_ctor(BlinkyButton * const this){
     // private data initialization
     this->isLedOn = false;
     this->number = 0;
-    strcpy(this->printable_string, "1213456789 123456789 ");
     
     // Init code, preferably use bsp.c defined functions to control peripheral 
     // to keep encapsulation
@@ -77,8 +76,8 @@ void BlinkyButton_ctor(BlinkyButton * const this){
 
 /* AO Class execution callback -----------------------------------------------*/
 /**
- * @brief This function implments the code that will be executed concurrently 
- * with anothe AO, preferably using herarchical state machines with event driven
+ * @brief This function implements the code that will be executed concurrently 
+ * with another AO, preferably using hierarchical state machines with event driven
  * paradigm in mind, which allows concurrency inside the AO itself.
  * 
  * @param this Object instance
@@ -89,7 +88,7 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
     // Initial event
     if(e->sig == INIT_SIG){
         TRIGGER_VOID_EVENT;
-        // Initilization
+        // Initialization
         
         // Button press simulation to avoid connect physical button for test 
         // purposes, by triggering event
@@ -113,35 +112,49 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
 
         }case BLINKY_AO_BLINKING_ST:{
 
-
             switch (e->sig){
+                case BLINKY_AO_SW1_PRESSED_SIG:
+                    printf("SW1_SIG\n");
+                    break;
+
+                case BLINKY_AO_SW2_PRESSED_SIG:
+                    printf("SW2_SIG\n");
+                    break;
+
+                case BLINKY_AO_SW3_PRESSED_SIG:
+                    printf("SW3_SIG\n");
+                    break;
+
+                case BLINKY_AO_SW4_PRESSED_SIG:
+                    printf("SW4_SIG\n");
+                    break;
+
+                case BLINKY_AO_SW5_PRESSED_SIG:
+                    printf("SW5_SIG\n");
+                    break;
+
                 case BLINKY_AO_TIMEOUT_SIG:{
                     if(!this->isLedOn){ /* LED not on */
                         gpio_put(LED_PIN, 1);
                         gpio_put(TEST_PIN, 1);
                         this->isLedOn = true;
-                        TimeEvent_arm(&this->te, (300 / portTICK_RATE_MS), 0U);
-
-                        
                     }else{  /* LED is on */
                         gpio_put(LED_PIN, 0);
                         gpio_put(TEST_PIN, 0);
                         this->isLedOn = false;
-                        TimeEvent_arm(&this->te, (300 / portTICK_RATE_MS), 0U);
-
-
-                        // static PRINTER_AO_TEXT_PL const print_text1_event = 
-                        //     {PRINTER_AO_TEXT0_SIG,"---------"};
-                        // Active_post(AO_printer, (Event*)&print_text1_event);
-
-
                     }
-                    static PRINTER_AO_TEXT_PL print_text1_event = {PRINTER_AO_TEXT0_SIG};
-                    //print_text1_event.super.sig = PRINTER_AO_TEXT0_SIG;
-                    sprintf(print_text1_event.string_buffer,"Numero: %d",this->number++);
-                    Active_post(AO_printer, (Event*)&print_text1_event);
-                    
+
+                    TimeEvent_arm(&this->te, (300 / portTICK_RATE_MS), 0U);
+                    static PRINTER_AO_TEXT_PL print_text1_event = 
+                                                    {PRINTER_AO_TEXT0_SIG};
+
+                    sprintf(print_text1_event.string_buffer,
+                            "Numero: %03u        .",
+                            this->number++);
+
+                    Active_post(AO_printer, (Event*)&print_text1_event);                    
                     break;
+
                 }default:
                     break;
             }

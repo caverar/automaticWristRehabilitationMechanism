@@ -3,7 +3,7 @@
   * @file    printer_AO.c
   * @author  Camilo Vera
   * @brief   printer active object
-  *          This file constainst an implentation example of an active object
+  *          This file constainst an implementation example of an active object
   *          using FreeAct over FreeRTOS 
   ****************************************************************************** 
 */
@@ -65,9 +65,9 @@ void Printer_ctor(Printer * const this){
 
 /* AO Class execution callback -----------------------------------------------*/
 /**
- * @brief This function implments the code that will be executed concurrently 
- * with anothe AO, preferably using herarchical state machines with event driven
- * paradigm in mind, which allows concurrency inside the AO itself.
+ * @brief This function implements the code that will be executed concurrently 
+ * with another AO, preferably using hierarchical state machines with event 
+ * driven paradigm in mind, which allows concurrency inside the AO itself.
  * 
  * @param this Object instance
  * @param e Events input
@@ -75,7 +75,7 @@ void Printer_ctor(Printer * const this){
 static void Printer_dispatch(Printer * const this, 
                                   Event const * const e){
     switch (e->sig) {
-        case INIT_SIG:      // This event is always excuted at the beginning.
+        case INIT_SIG:      // This event is always executed at the beginning.
             // Clear screen
             dev_hd44780_text(i2c0, 0x27, 0, true, "                    ");
             dev_hd44780_text(i2c0, 0x27, 1, true, "                    ");
@@ -87,7 +87,7 @@ static void Printer_dispatch(Printer * const this,
             dev_hd44780_text(i2c0, 0x27, 0, true,
                              ((PRINTER_AO_TEXT_PL*)e)->string_buffer);
             break;
-
+        }
         case PRINTER_AO_TEXT1_SIG:{
             dev_hd44780_text(i2c0, 0x27, 1, true,
                              ((PRINTER_AO_TEXT_PL*)e)->string_buffer);

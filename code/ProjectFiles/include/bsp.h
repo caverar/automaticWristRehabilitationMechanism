@@ -24,19 +24,37 @@ extern Active *AO_blinkyButton;
 #define BUTTON_PIN 14
 
 
+#define SW1_MIN_VAL 0
+#define SW1_MAX_VAL 50
+#define SW2_MIN_VAL 100
+#define SW2_MAX_VAL 200
+#define SW3_MIN_VAL 300
+#define SW3_MAX_VAL 450
+#define SW4_MIN_VAL 600
+#define SW4_MAX_VAL 750
+#define SW5_MIN_VAL 1400
+#define SW5_MAX_VAL 1500
+
+
+
+#define DEBOUNCE_HIGH_LEVEL 101
+
+uint8_t buttons_past_states;
+uint8_t buttons_states;
+uint16_t buttons_levels[5];
+// uint8_t buttons_past_states = 0x00;
+// uint8_t buttons_states = 0x00;
+// uint16_t buttons_levels[5] = {0,0,0,0,0};
+
+bool sw_debounce(bool current_state, u_int16_t* level);
+void debounce_all(uint16_t adc_val,
+                  uint16_t* buttons_levels,
+                  uint8_t* buttons_states);
+
 void BSP_init(void);
 // void BSP_start(void);
-// void BSP_led0_on(void);
-// void BSP_led0_off(void);
-// void BSP_led1_on(void);
-// void BSP_led1_off(void);
 
-// enum Signals {
-//     TIMEOUT_SIG = USER_SIG,
-//     BUTTON_PRESSED_SIG,
-//     BUTTON_RELEASED_SIG,
-// };
 
-//extern Active *AO_blinkyButton;
+extern Active *AO_blinkyButton;
 
 #endif /* BSP_H */

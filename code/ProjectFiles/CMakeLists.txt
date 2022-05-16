@@ -26,6 +26,7 @@ target_link_libraries(
     pico_stdlib
     hardware_i2c
     hardware_timer
+    hardware_adc
     freertos
     freeact
 )

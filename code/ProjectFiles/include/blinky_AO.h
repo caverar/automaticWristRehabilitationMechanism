@@ -6,7 +6,7 @@
   * @file    blinky_AO.h
   * @author  Camilo Vera
   * @brief   blinky active object
-  *          This file constainst an implentation example of an active object
+  *          This file constainst an implantation example of an active object
   *          using FreeAct over FreeRTOS 
   ****************************************************************************** 
 */
@@ -47,7 +47,11 @@ extern Active *AO_blinkyButton;
 enum Signals {
     BLINKY_AO_TIMEOUT_SIG = USER_SIG,    // First Signals must replace USER_SIG
     // User Signals
-    BLINKY_AO_BUTTON_PRESSED_SIG
+    BLINKY_AO_SW1_PRESSED_SIG,
+    BLINKY_AO_SW2_PRESSED_SIG,
+    BLINKY_AO_SW3_PRESSED_SIG,
+    BLINKY_AO_SW4_PRESSED_SIG,
+    BLINKY_AO_SW5_PRESSED_SIG
 };
 
 
@@ -57,24 +61,21 @@ typedef struct {
 
     TimeEvent te;               // Add TimeEvent to the AO
 
-    // Events with load:
-
-
     /* add private data (local variables) for the AO... */
     enum{
         BLINKY_AO_START_ST,
         BLINKY_AO_BLINKING_ST
     }state;
-    char printable_string[20];
+
     bool isLedOn;               // Led State
-    int8_t number;
+    uint8_t number;              // test counter
 } BlinkyButton;
 
 
 /* AO Class execution callback -----------------------------------------------*/
 /**
- * @brief This function implments the code that will be executed concurrently 
- * with anothe AO, preferably using herarchical state machines with event driven
+ * @brief This function implements the code that will be executed concurrently 
+ * with another AO, preferably using hierarchical state machines with event driven
  * paradigm in mind, which allows concurrency inside the AO itself.
  * 
  * @param this Object instance

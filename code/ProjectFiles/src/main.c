@@ -51,7 +51,7 @@ static Event *blinkyButton_queue[10];
 static BlinkyButton blinkyButton;
 
 static StackType_t printer_stack[configMINIMAL_STACK_SIZE]; // task stack
-static PRINTER_AO_MAX_SIZE_EVENT *printer_queue[10];
+static Event *printer_queue[10];
 static Printer printer;
 
 //object static instance and inheritance from Active class:
