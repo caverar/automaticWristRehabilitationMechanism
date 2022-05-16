@@ -32,9 +32,9 @@ extern "C" {
 
 
 /* Constants definitions -----------------------------------------------------*/
-// const uint LED_PIN = PICO_DEFAULT_LED_PIN;
-// const uint TEST_PIN = 15;
 
+#define LCD_SDA_PIN 16
+#define LCD_SCL_PIN 17
 /* AO Class input Signals ----------------------------------------------------*/
 
 /**
@@ -44,13 +44,17 @@ extern "C" {
 
 typedef struct{
     Event super;                // Inherit from event
-    char* string_buffer;        // Buffer
+    char string_buffer[20];     // Buffer
 }PRINTER_AO_TEXT_PL;
 
+#define PRINTER_AO_MAX_SIZE_EVENT PRINTER_AO_TEXT_PL
 
 enum printer_Signals{
-    PRINTER_AO_TIMEOUT_SIG = USER_SIG,     // First Signal always must replace USER_SIG
-    PRINTER_AO_TEXT_SIG
+    PRINTER_AO_TIMEOUT_SIG = USER_SIG,  // First Signal always must replace USER_SIG
+    PRINTER_AO_TEXT0_SIG,               // Signal to print in the first row
+    PRINTER_AO_TEXT1_SIG,               // Signal to print in the second row
+    PRINTER_AO_TEXT2_SIG,               // Signal to print in the third row
+    PRINTER_AO_TEXT3_SIG                // Signal to print in the fourth row
 };
 
 
@@ -60,7 +64,7 @@ typedef struct {
     Active super;               // Inherit from Active Object base class
     TimeEvent te;               // Add TimeEvent to the AO
     /* add private data (local variables) for the AO... */
-
+    int var;
 }Printer;
 
 

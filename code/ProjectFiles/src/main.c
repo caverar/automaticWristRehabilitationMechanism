@@ -51,19 +51,19 @@ static Event *blinkyButton_queue[10];
 static BlinkyButton blinkyButton;
 
 static StackType_t printer_stack[configMINIMAL_STACK_SIZE]; // task stack
-static Event *printer_queue[10];
+static PRINTER_AO_MAX_SIZE_EVENT *printer_queue[10];
 static Printer printer;
 
 //object static instance and inheritance from Active class:
 Active *AO_blinkyButton = &blinkyButton.super;
-
 Active *AO_printer = &printer.super;
 
 
 
 int main(){
-    BSP_init();
+    
     stdio_init_all();
+    BSP_init();
 
     /* create and start the BlinkyButton AO */
     BlinkyButton_ctor(&blinkyButton);
@@ -78,7 +78,7 @@ int main(){
     Printer_ctor(&printer);
     Active_start(AO_printer,
                  1U,
-                 printer_queue,
+                 (Event**)printer_queue,
                  sizeof(printer_queue)/sizeof(printer_queue[0]),
                  printer_stack,
                  sizeof(printer_stack),

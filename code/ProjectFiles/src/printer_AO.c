@@ -19,6 +19,7 @@
 
 // SDK Libraries
 #include "pico/stdlib.h"
+#include "hardware/i2c.h"
 //#include "hardware/uart.h"
 //#include "hardware/gpio.h"
 
@@ -31,6 +32,7 @@
 
 // Project libraries
 #include "bsp.h"
+#include "dev_hd44780.h"
 
 /* Implementation ------------------------------------------------------------*/
 
@@ -49,10 +51,17 @@ void Printer_ctor(Printer * const this){
     Active_ctor(&this->super, (DispatchHandler)&Printer_dispatch);
     TimeEvent_ctor(&this->te, PRINTER_AO_TIMEOUT_SIG, &this->super);
 
-    stdio_init_all();
+    //stdio_init_all();
+
+    i2c_init(i2c0, 100 * 1000);
+    gpio_set_function(LCD_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(LCD_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(LCD_SDA_PIN);
+    gpio_pull_up(LCD_SCL_PIN);
+
+    dev_hd44780_init(i2c0, 0x27);
+
 }
-
-
 
 /* AO Class execution callback -----------------------------------------------*/
 /**
@@ -67,14 +76,34 @@ static void Printer_dispatch(Printer * const this,
                                   Event const * const e){
     switch (e->sig) {
         case INIT_SIG:      // This event is always excuted at the beginning.
-        case PRINTER_AO_TIMEOUT_SIG: { // Time trigger event
+            // Clear screen
+            dev_hd44780_text(i2c0, 0x27, 0, true, "                    ");
+            dev_hd44780_text(i2c0, 0x27, 1, true, "                    ");
+            dev_hd44780_text(i2c0, 0x27, 2, true, "                    ");
+            dev_hd44780_text(i2c0, 0x27, 3, true, "                    ");
+            break;
 
-            printf("Hola mundo\n");
-            TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
+        case PRINTER_AO_TEXT0_SIG:{
+            dev_hd44780_text(i2c0, 0x27, 0, true,
+                             ((PRINTER_AO_TEXT_PL*)e)->string_buffer);
+            break;
+
+        case PRINTER_AO_TEXT1_SIG:{
+            dev_hd44780_text(i2c0, 0x27, 1, true,
+                             ((PRINTER_AO_TEXT_PL*)e)->string_buffer);
             break;
         }
-        case PRINTER_AO_TEXT_SIG: {
-            printf(((const PRINTER_AO_TEXT_PL*)e)->string_buffer);
+
+        case PRINTER_AO_TEXT2_SIG:{
+            dev_hd44780_text(i2c0, 0x27, 2, true,
+                             ((PRINTER_AO_TEXT_PL*)e)->string_buffer);
+            break;
+        }
+
+        case PRINTER_AO_TEXT3_SIG:{
+            dev_hd44780_text(i2c0, 0x27, 3, true,
+                             ((PRINTER_AO_TEXT_PL*)e)->string_buffer);
+            break;
         }
 
         default: {

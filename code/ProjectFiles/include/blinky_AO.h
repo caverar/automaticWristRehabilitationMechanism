@@ -56,12 +56,18 @@ typedef struct {
     Active super;               // Inherit from Active Object base class
 
     TimeEvent te;               // Add TimeEvent to the AO
+
+    // Events with load:
+
+
     /* add private data (local variables) for the AO... */
     enum{
         BLINKY_AO_START_ST,
         BLINKY_AO_BLINKING_ST
     }state;
+    char printable_string[20];
     bool isLedOn;               // Led State
+    int8_t number;
 } BlinkyButton;
 
 

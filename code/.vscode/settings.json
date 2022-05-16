@@ -23,7 +23,12 @@
         "freertos.h": "c",
         "freeact.h": "c",
         "bsp.h": "c",
-        "printer_ao.h": "c"
+        "printer_ao.h": "c",
+        "i2c.h": "c",
+        "time.h": "c",
+        "timer.h": "c",
+        "stdbool.h": "c",
+        "blinky_ao.h": "c"
     },
     "cortex-debug.showRTOS": false,
     "cmake.sourceDirectory": "${workspaceFolder}/.",
