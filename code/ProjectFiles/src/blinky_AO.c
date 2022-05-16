@@ -64,6 +64,7 @@ void BlinkyButton_ctor(BlinkyButton * const this){
     // private data initialization
     this->isLedOn = false;
     this->number = 0;
+    this->number2 = 0;
     
     // Init code, preferably use bsp.c defined functions to control peripheral 
     // to keep encapsulation
@@ -113,27 +114,52 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
         }case BLINKY_AO_BLINKING_ST:{
 
             switch (e->sig){
-                case BLINKY_AO_SW1_PRESSED_SIG:
-                    printf("SW1_SIG\n");
+                case BLINKY_AO_SW1_PRESSED_SIG:{
+                    static PRINTER_AO_TEXT_PL print_sw1_event = 
+                                                    {PRINTER_AO_TEXT1_SIG};
+                    sprintf(print_sw1_event.string_buffer,
+                            "SW1: |------> %03u --",
+                            this->number2++);
+                    Active_post(AO_printer, (Event*)&print_sw1_event);
+                    break;
+                }case BLINKY_AO_SW2_PRESSED_SIG:{
+                    static PRINTER_AO_TEXT_PL print_sw2_event = 
+                                                    {PRINTER_AO_TEXT1_SIG};
+                    sprintf(print_sw2_event.string_buffer,
+                            "-- %03u <------| :SW2",
+                            this->number2++);
+                    Active_post(AO_printer, (Event*)&print_sw2_event);
+
                     break;
 
-                case BLINKY_AO_SW2_PRESSED_SIG:
-                    printf("SW2_SIG\n");
+                }case BLINKY_AO_SW3_PRESSED_SIG:{
+                    static PRINTER_AO_TEXT_PL print_sw3_event = 
+                                                    {PRINTER_AO_TEXT2_SIG};
+                    sprintf(print_sw3_event.string_buffer,
+                            "SW3: |------> %03u --",
+                            this->number2++);
+                    Active_post(AO_printer, (Event*)&print_sw3_event);
                     break;
 
-                case BLINKY_AO_SW3_PRESSED_SIG:
-                    printf("SW3_SIG\n");
+                }case BLINKY_AO_SW4_PRESSED_SIG:{
+                    static PRINTER_AO_TEXT_PL print_sw4_event = 
+                                                    {PRINTER_AO_TEXT2_SIG};
+                    sprintf(print_sw4_event.string_buffer,
+                            "-- %03u <------| :SW4",
+                            this->number2++);
+                    Active_post(AO_printer, (Event*)&print_sw4_event);
                     break;
 
-                case BLINKY_AO_SW4_PRESSED_SIG:
-                    printf("SW4_SIG\n");
+                }case BLINKY_AO_SW5_PRESSED_SIG:{
+                    static PRINTER_AO_TEXT_PL print_sw5_event = 
+                                                    {PRINTER_AO_TEXT3_SIG};
+                    sprintf(print_sw5_event.string_buffer,
+                            "SW5: |------> %03u --",
+                            this->number2++);
+                    Active_post(AO_printer, (Event*)&print_sw5_event);
                     break;
 
-                case BLINKY_AO_SW5_PRESSED_SIG:
-                    printf("SW5_SIG\n");
-                    break;
-
-                case BLINKY_AO_TIMEOUT_SIG:{
+                }case BLINKY_AO_TIMEOUT_SIG:{
                     if(!this->isLedOn){ /* LED not on */
                         gpio_put(LED_PIN, 1);
                         gpio_put(TEST_PIN, 1);
@@ -145,14 +171,14 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
                     }
 
                     TimeEvent_arm(&this->te, (300 / portTICK_RATE_MS), 0U);
-                    static PRINTER_AO_TEXT_PL print_text1_event = 
+                    static PRINTER_AO_TEXT_PL print_text0_event = 
                                                     {PRINTER_AO_TEXT0_SIG};
 
-                    sprintf(print_text1_event.string_buffer,
-                            "Numero: %03u        .",
+                    sprintf(print_text0_event.string_buffer,
+                            "Contador: %03u       ",
                             this->number++);
 
-                    Active_post(AO_printer, (Event*)&print_text1_event);                    
+                    Active_post(AO_printer, (Event*)&print_text0_event);                    
                     break;
 
                 }default:

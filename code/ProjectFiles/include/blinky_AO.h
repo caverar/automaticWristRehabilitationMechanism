@@ -69,6 +69,7 @@ typedef struct {
 
     bool isLedOn;               // Led State
     uint8_t number;              // test counter
+    uint8_t  number2;
 } BlinkyButton;
 
 
