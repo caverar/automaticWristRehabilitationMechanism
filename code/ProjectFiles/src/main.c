@@ -40,6 +40,7 @@
 // Active Objects
 #include "blinky_AO.h"
 #include "printer_AO.h"
+#include "UI_AO.h"
 
 // Project libraries
 #include "bsp.h"
@@ -54,9 +55,14 @@ static StackType_t printer_stack[configMINIMAL_STACK_SIZE]; // task stack
 static Event *printer_queue[10];
 static Printer printer;
 
+static StackType_t UI_stack[configMINIMAL_STACK_SIZE]; // task stack
+static Event *UI_queue[10];
+static UI ui;
+
 //object static instance and inheritance from Active class:
 Active *AO_blinkyButton = &blinkyButton.super;
 Active *AO_printer = &printer.super;
+Active *AO_UI = &ui.super;
 
 
 
@@ -82,6 +88,15 @@ int main(){
                  sizeof(printer_queue)/sizeof(printer_queue[0]),
                  printer_stack,
                  sizeof(printer_stack),
+                 0U);
+
+    UI_ctor(&ui);
+    Active_start(AO_UI,
+                 1U,
+                 UI_queue,
+                 sizeof(UI_queue)/sizeof(UI_queue[0]),
+                 UI_stack,
+                 sizeof(UI_stack),
                  0U);
 
 

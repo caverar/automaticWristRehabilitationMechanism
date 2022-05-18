@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     src/blinky_AO.c
     src/printer_AO.c
     src/dev_hd44780.c
+    src/UI_AO.c
 )
 
 # Create map/bin/hex/uf2 files.

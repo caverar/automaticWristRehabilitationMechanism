@@ -17,9 +17,12 @@
 // Active Objects
 #include "blinky_AO.h"
 #include "printer_AO.h"
+#include "UI_AO.h"
+
 // External AO calls
 extern Active *AO_printer;
 extern Active *AO_blinkyButton;
+extern Active *AO_UI;
 
 
 void BSP_init(void){
@@ -108,33 +111,48 @@ void vApplicationTickHook(void) {
 
     switch(buttons_states & ~buttons_past_states){
         case 0x01:{
-            static Event const sw1PressedEvt = {BLINKY_AO_SW1_PRESSED_SIG};
-            Active_postFromISR(AO_blinkyButton, &sw1PressedEvt,
+            static Event const sw1PressedEvt = {UI_AO_SW1_PRESSED_SIG};
+            Active_postFromISR(AO_UI, &sw1PressedEvt,
                                &xHigherPriorityTaskWoken);
+            // static Event const sw1PressedEvt_2 = {BLINKY_AO_SW1_PRESSED_SIG};
+            // Active_postFromISR(AO_blinkyButton, &sw1PressedEvt_2,
+            //                    &xHigherPriorityTaskWoken);
             break;
         }
         case 0x02:{
-            static Event const sw2PressedEvt = {BLINKY_AO_SW2_PRESSED_SIG};
-            Active_postFromISR(AO_blinkyButton, &sw2PressedEvt,
+            static Event const sw2PressedEvt = {UI_AO_SW2_PRESSED_SIG};
+            Active_postFromISR(AO_UI, &sw2PressedEvt,
                                &xHigherPriorityTaskWoken);
+            // static Event const sw2PressedEvt_2 = {BLINKY_AO_SW2_PRESSED_SIG};
+            // Active_postFromISR(AO_blinkyButton, &sw2PressedEvt_2,
+            //                    &xHigherPriorityTaskWoken);
             break;
         }
         case 0x04:{
-            static Event const sw3PressedEvt = {BLINKY_AO_SW3_PRESSED_SIG};
-            Active_postFromISR(AO_blinkyButton, &sw3PressedEvt,
+            static Event const sw3PressedEvt = {UI_AO_SW3_PRESSED_SIG};
+            Active_postFromISR(AO_UI, &sw3PressedEvt,
                                &xHigherPriorityTaskWoken);
+            // static Event const sw3PressedEvt_2 = {BLINKY_AO_SW3_PRESSED_SIG};
+            // Active_postFromISR(AO_blinkyButton, &sw3PressedEvt_2,
+            //                    &xHigherPriorityTaskWoken);
             break;
         }
         case 0x08:{
-            static Event const sw4PressedEvt = {BLINKY_AO_SW4_PRESSED_SIG};
-            Active_postFromISR(AO_blinkyButton, &sw4PressedEvt,
+            static Event const sw4PressedEvt = {UI_AO_SW4_PRESSED_SIG};
+            Active_postFromISR(AO_UI, &sw4PressedEvt,
                                &xHigherPriorityTaskWoken);
+            // static Event const sw4PressedEvt_2 = {BLINKY_AO_SW4_PRESSED_SIG};
+            // Active_postFromISR(AO_blinkyButton, &sw4PressedEvt_2,
+            //                    &xHigherPriorityTaskWoken);
             break;
         }
         case 0x10:{
-            static Event const sw5PressedEvt = {BLINKY_AO_SW5_PRESSED_SIG};
-            Active_postFromISR(AO_blinkyButton, &sw5PressedEvt,
+            static Event const sw5PressedEvt = {UI_AO_SW5_PRESSED_SIG};
+            Active_postFromISR(AO_UI, &sw5PressedEvt,
                                &xHigherPriorityTaskWoken);
+            // static Event const sw5PressedEvt_2 = {BLINKY_AO_SW5_PRESSED_SIG};
+            // Active_postFromISR(AO_blinkyButton, &sw5PressedEvt_2,
+            //                    &xHigherPriorityTaskWoken);
             break;
         }
         default:

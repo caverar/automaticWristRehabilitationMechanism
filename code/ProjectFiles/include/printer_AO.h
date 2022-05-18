@@ -33,8 +33,8 @@ extern "C" {
 
 /* Constants definitions -----------------------------------------------------*/
 
-#define LCD_SDA_PIN 16
-#define LCD_SCL_PIN 17
+#define LCD_SDA_PIN 20
+#define LCD_SCL_PIN 21
 /* AO Class input Signals ----------------------------------------------------*/
 
 /**
