@@ -76,6 +76,7 @@ typedef struct{
 }Exercise;
 
 typedef struct{
+    uint num_ejercicios;
     Exercise ejercicios[10];
     uint pause;        
 }Routine;
@@ -98,8 +99,8 @@ typedef struct {
         UI_AO_DO_DEFAULT_ST,
         UI_AO_CONFIG_EXERCISE_ST,
         UI_AO_REPETITIONS_ST,
-        UI_AO_MIN_ANGLE_ST,
-        UI_AO_MAX_ANGLE_ST,
+        UI_AO_POS_BAR_ST,
+        UI_AO_MEASURE_ANGLE,
         UI_AO_TIME_ST,
         UI_AO_EXERCISE_READY_ST,
         UI_AO_BEGIN_ROUTINE_ST,
@@ -166,7 +167,16 @@ void UI_ctor(UI * const this);
 
 
 /* AO Class methods ----------------------------------------------------------*/
-
+void display_row1(char* text);
+void display_row2(char* text);
+void display_row3(char* text);
+void display_row4(char* text);
+void display_rows(char* text1, char* text2, char* text3, char* text4);
+void select_option(char* text);
+void display_plus_button(UI_State estado);
+void display_minus_button(UI_State estado);
+void display_inicio(UI_State estado);
+void change_string(char * base, int l, char* addition);
 void UI_show_inicio(UI_State estado);
 void UI_show_plus_button(UI_State estado);
 void UI_show_minus_button(UI_State estado);
