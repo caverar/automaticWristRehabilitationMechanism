@@ -96,7 +96,6 @@ typedef struct {
         UI_AO_CALIBRATE_ST,
         UI_AO_INICIO_ST,
         UI_AO_CREATE_ST,
-        UI_AO_DO_DEFAULT_ST,
         UI_AO_CONFIG_EXERCISE_ST,
         UI_AO_REPETITIONS_ST,
         UI_AO_POS_BAR_ST,
@@ -104,10 +103,14 @@ typedef struct {
         UI_AO_TIME_ST,
         UI_AO_EXERCISE_READY_ST,
         UI_AO_BEGIN_ROUTINE_ST,
-        UI_AO_CHECK_ROUTINE_ST,
-        UI_AO_DO_ROUTINE_NOW_ST,
         UI_AO_SET_PAUSE_ST,
-        UI_AO_SET_AS_DEFAULT_ST
+        UI_AO_SET_AS_DEFAULT_ST,
+        UI_AO_DO_DEFAULT_ST,
+        UI_AO_CHECK_ROUTINE_ST,
+        UI_AO_SEE_PAUSE_ST,
+        UI_AO_SEE_EXERCISES_ST,
+        UI_AO_SEE_AN_EXERCISE_ST,
+        UI_AO_DO_ROUTINE_NOW_ST
     }state;
 
         // default values
