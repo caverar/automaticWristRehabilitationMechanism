@@ -50,12 +50,7 @@ static UI_State INICIO = {" Choose an option:", 2,{" Create Routine     ", " Do 
 static UI_State CREATE = {" Add exercise       ", 4, {" PronoSupination    ", " FlexoExtension     ", " Ab-,Adduction      ", " Begin Routine      "}};
 static UI_State DO_DEFAULT = {" Do default routine"};
 static UI_State CONFIG_EXERCISE = {"Config. ", 5, {" Repetitions: 1     ", " Min. Angle: -20    ", " Max. Angle: 20     ", " Time: 3            ", " Exercise Ready     "}};
-static UI_State REPETITIONS = {};
-static UI_State MIN_ANGLE = {};
-static UI_State MAX_ANGLE = {};
-static UI_State TIME = {};
-static UI_State EXERCISE_READY = {};
-static UI_State BEGIN_ROUTINE = {" Begin routine", 4,{" Check Routine first", " Do routine now", " Set pause betw. ex.", " Set as default rout"}};
+static UI_State BEGIN_ROUTINE = {" Begin routine      ", 4,{" Check Routine first", " Do routine now     ", " Set pause betw. ex.", " Set as default rout"}};
 static UI_State CHECK_ROUTINE = {};
 static UI_State DO_ROUTINE_NOW = {}; 
 static UI_State SET_PAUSE = {};
@@ -86,6 +81,9 @@ char char_data[3];
 Exercise default_exercise_1 = {0, 5, -45, 45, 5};
 Exercise default_exercise_2 = {1, 5, -30, 30, 5};
 Exercise default_exercise_3 = {2, 5, -20, 20, 5};
+
+//Selected routine. 0: default routine, 1: created routine
+uint selected_routine = 0;
 
 Routine created_routine;
 /* AO Class Constructor ------------------------------------------------------*/
@@ -130,6 +128,9 @@ void UI_ctor(UI * const this){
 
     //exercise type PronoSup at the beginning:
     this->exercise_type = 0;
+
+    //number of exercises in created routine is 0 at the beginning
+    created_routine.num_ejercicios = 0;
         
 }
 
@@ -451,6 +452,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             sprintf(char_data,"%ld", this->max_angle);
                             change_string(CONFIG_EXERCISE.options[2], 13, char_data);
                         }
+                        i = 0;
                         this->state = UI_AO_CONFIG_EXERCISE_ST; 
                         TRIGGER_VOID_EVENT;                                       
                     break;
@@ -523,7 +525,38 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
 
             case UI_AO_EXERCISE_READY_ST:{
                 switch(e->sig){
-                    case UI_AO_TIMEOUT_SIG:{                        
+                    case UI_AO_TIMEOUT_SIG:{ 
+                        if(created_routine.num_ejercicios<10){ 
+                            if(this->min_angle < this->max_angle){
+                                Exercise new_exercise = {this->exercise_type, this->reps, this->min_angle,
+                                                        this->max_angle, this->time_in_position};
+                                created_routine.ejercicios[created_routine.num_ejercicios] = new_exercise;
+                                created_routine.num_ejercicios++;
+                                change_string(modified_buffer, 0, "                    ");
+                                change_string(modified_buffer, 5, availableExercises[this->exercise_type]);
+                                display_rows("    Exercise of     ", modified_buffer, "    was added       ", "                    ");   
+                                this->state = UI_AO_CREATE_ST;  
+                                TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U); 
+                                for(int i = 0; i<created_routine.num_ejercicios; i++){
+                                    printf("Exercise %d:\n", i);
+                                    printf("tipo: %d\n",created_routine.ejercicios[i].type_of_exercise);
+                                    printf("reps: %d\n",created_routine.ejercicios[i].num_of_reps);
+                                    printf("min: %d\n",created_routine.ejercicios[i].lim_min);
+                                    printf("max: %d\n",created_routine.ejercicios[i].lim_max);
+                                    printf("secs: %d\n",created_routine.ejercicios[i].time_pos);
+                                }                       
+                            }
+                            else{
+                                display_rows("   Max. angle must  ", "   be greater than  ", "     min. angle     ", "                    ");
+                                this->state = UI_AO_CONFIG_EXERCISE_ST;
+                                TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U);                           
+                            } 
+                        }  
+                        else{
+                            display_rows("   Max. number of   ", "     exercises      ", "     was reached    ", "-Begin routine now!-");
+                            this->state = UI_AO_CREATE_ST;  
+                            TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U); 
+                        }                   
                         
                     break;
                     }
@@ -535,8 +568,68 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             break;    
             }
 
+            case UI_AO_BEGIN_ROUTINE_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(created_routine.num_ejercicios == 0){
+                            display_rows("  Routine is empty  ", "                    ", "Please add exercises", "                    ");
+                            this->state = UI_AO_CREATE_ST;
+                            TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U);
+                        }
+                        else{
+                            selected_routine = 1;
+                            display_inicio(BEGIN_ROUTINE);
+                        }
+                    break;
+                    }
+                    case UI_AO_SW3_PRESSED_SIG:{
+                        display_plus_button(BEGIN_ROUTINE);                                           
+                    break;
+                    }
+                    case UI_AO_SW2_PRESSED_SIG:{
+                        display_minus_button(BEGIN_ROUTINE);                                           
+                    break;
+                    }
+                    case UI_AO_SW4_PRESSED_SIG:{
+                        printf("Enter\n");
+                        switch (i){
+                            case 0:{                                
+                                this->state = UI_AO_CHECK_ROUTINE_ST;
+                            break;
+                            }
+                            case 1:{
+                                this->state = UI_AO_DO_ROUTINE_NOW_ST;
+                            break;
+                            }
+                            case 2:{
+                                this->state = UI_AO_SET_PAUSE_ST;
+                            break;
+                            }
+                            case 3:{
+                                this->state = UI_AO_SET_AS_DEFAULT_ST;
+                            break;
+                            }
+                            default:
+                                break;
+                        }
+                    i = 0; 
+                    TRIGGER_VOID_EVENT;                                          
+                    break;
+                    }
+                    case UI_AO_SW1_PRESSED_SIG:{
+                        printf("Back\n");
+                        this->state = UI_AO_CREATE_ST;
+                        i = 0;         
+                        TRIGGER_VOID_EVENT;                            
+                    break;
+                    }
+                    default:
+                        break;
 
-        
+                }
+
+            break;
+            }
             default:
                 break;
 
