@@ -75,6 +75,9 @@ int8_t prev_pause;
 //new angle from encoder
 int8_t new_angle;
 
+//counter
+int8_t counter = 5;
+
 //used to save numerical value in char value
 char char_data[3];
 
@@ -86,7 +89,7 @@ Exercise default_exercise_3 = {2, 5, -20, 20, 5};
 //Selected routine. 0: default routine, 1: created routine
 uint selected_routine = 0;
 
-//number of exercise to see
+//number of exercise to see or execute
 uint selected_exercise = 0;
 
 //Routines
@@ -176,12 +179,36 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                 switch (e->sig){
                     
                     case UI_AO_TIMEOUT_SIG:{
-                        this->state = UI_AO_CALIBRATE_ST;
+                        this->state = UI_AO_REMOVE_HANDS_ST;
                         display_row2(HOME.title);
                         TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U);
                     break;
                     }default:
                         break;                
+                }
+            break;
+            }
+            case UI_AO_REMOVE_HANDS_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(counter == 0){
+                            change_string(modified_buffer, 0, "Now!");
+                            display_row4(modified_buffer);
+                            counter = 3;
+                            this->state = UI_AO_CALIBRATE_ST;
+                            TimeEvent_arm(&this->te, (1500 / portTICK_RATE_MS), 0U);
+                        }
+                        else{
+                        sprintf(char_data,"%ld", counter);
+                        change_string(modified_buffer, 0, char_data);
+                        display_rows("   Take hands off   ", "     the device     ", "   Calibrating in   ", modified_buffer);
+                        counter--;
+                        TimeEvent_arm(&this->te, (1000 / portTICK_RATE_MS), 0U);
+                        }                        
+                        break;
+                    }
+                    default:
+                        break;
                 }
             break;
             }
@@ -191,7 +218,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
 
                     case UI_AO_TIMEOUT_SIG:{
                         this->state = UI_AO_INICIO_ST;//esta línea no iría
-                        display_row2(CALIBRATE.title);
+                        display_rows("                    ", CALIBRATE.title, "                    ", "                    ");
                         TimeEvent_arm(&this->te, (3000 / portTICK_RATE_MS), 0U);//esta tampoco
                         //enviar desde aquí una señal a control_AO para que genere el evento
                         break;
@@ -944,6 +971,61 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     default:
                         break;
                 }
+            break;
+            }
+            case UI_AO_DO_ROUTINE_NOW_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        selected_exercise = 0;
+                        display_rows("   Take bar  with   ", "   your left hand   ", "                    ", "If ready press enter");
+                    break;
+                    }
+                    case UI_AO_SW4_PRESSED_SIG:{
+                        this->state = UI_AO_COUNTDOWN_ST;
+                        TRIGGER_VOID_EVENT;
+                    break;
+                    }
+                    default:
+                        break;
+                }
+            break;
+            }
+            case UI_AO_COUNTDOWN_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(counter == 0){
+                            change_string(modified_buffer, 0, "GO!");
+                            display_row4(modified_buffer);
+                            this->state = UI_AO_EXECUTE_EXERCISE_ST;
+                            TimeEvent_arm(&this->te, (1500 / portTICK_RATE_MS), 0U);
+                        }
+                        else{
+                        sprintf(char_data,"%ld", counter);
+                        change_string(modified_buffer, 0, char_data);
+                        display_rows("                    ", "Beginning routine in", "                    ", modified_buffer);
+                        counter--;
+                        TimeEvent_arm(&this->te, (1000 / portTICK_RATE_MS), 0U);
+                        }                        
+                    break;
+                    }
+                    default:
+                        break;
+                }
+            break;
+            }
+            case UI_AO_EXECUTE_EXERCISE_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+
+                    break;
+                    }
+
+                    default:
+                        break;
+                }
+
+
+
             break;
             }
             default:
