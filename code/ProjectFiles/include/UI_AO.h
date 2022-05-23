@@ -93,6 +93,7 @@ typedef struct {
     /* add private data (local variables) for the AO... */
     enum{
         UI_AO_HOME_ST,
+        UI_AO_REMOVE_HANDS_ST,
         UI_AO_CALIBRATE_ST,
         UI_AO_INICIO_ST,
         UI_AO_CREATE_ST,
@@ -110,7 +111,9 @@ typedef struct {
         UI_AO_SEE_PAUSE_ST,
         UI_AO_SEE_EXERCISES_ST,
         UI_AO_SEE_AN_EXERCISE_ST,
-        UI_AO_DO_ROUTINE_NOW_ST
+        UI_AO_DO_ROUTINE_NOW_ST,
+        UI_AO_COUNTDOWN_ST,
+        UI_AO_EXECUTE_EXERCISE_ST
     }state;
 
         // default values
