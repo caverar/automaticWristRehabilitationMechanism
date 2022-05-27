@@ -92,6 +92,7 @@ typedef struct {
     TimeEvent te;               // Add TimeEvent to the AO
     /* add private data (local variables) for the AO... */
     enum{
+        UI_AO_PAUSE_ST,
         UI_AO_HOME_ST,
         UI_AO_REMOVE_HANDS_ST,
         UI_AO_CALIBRATE_ST,
@@ -113,7 +114,12 @@ typedef struct {
         UI_AO_SEE_AN_EXERCISE_ST,
         UI_AO_DO_ROUTINE_NOW_ST,
         UI_AO_COUNTDOWN_ST,
-        UI_AO_EXECUTE_EXERCISE_ST
+        UI_AO_CENTER_DEVICE_ST,
+        UI_AO_MOVE_BAR_ST,
+        UI_AO_MOVE_TO_MIN_ANGLE_ST,
+        UI_AO_MOVE_TO_MAX_ANGLE_ST,
+        UI_AO_END_OF_REPETITION_ST,
+        UI_AO_FINISH_ST
     }state;
 
         // default values

@@ -81,6 +81,9 @@ int8_t counter = 5;
 //used to save numerical value in char value
 char char_data[3];
 
+//pause active
+bool pause_active = false;
+
 //Exercises for default routine:
 Exercise default_exercise_1 = {0, 5, -45, 45, 5};
 Exercise default_exercise_2 = {1, 5, -30, 30, 5};
@@ -91,6 +94,9 @@ uint selected_routine = 0;
 
 //number of exercise to see or execute
 uint selected_exercise = 0;
+
+uint current_repetition = 0;
+bool inicio;
 
 //Routines
 Routine created_routine;
@@ -172,8 +178,26 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
         TRIGGER_VOID_EVENT;
         
     }else{
+        // if(e->sig == ERROR_SIG){
+        //     display_rows("    Error occured   ", "                    ", "   Restart device   ", "                    ");
+        // }
+        if(e->sig == UI_AO_SW5_PRESSED_SIG){
+            if(!pause_active){
+                this->state = UI_AO_PAUSE_ST;
+                pause_active = true;
+            }
+            else{
+                this->state = UI_AO_CENTER_DEVICE_ST;
+                TRIGGER_VOID_EVENT;
+                pause_active = false;
+            }
+        }
         switch(this->state){
 
+            case UI_AO_PAUSE_ST:{
+                display_rows("System was          ", "paused              ", "                    ", "                    ");              
+            break;
+            }
             case UI_AO_HOME_ST:{
 
                 switch (e->sig){
@@ -996,7 +1020,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         if(counter == 0){
                             change_string(modified_buffer, 0, "GO!");
                             display_row4(modified_buffer);
-                            this->state = UI_AO_EXECUTE_EXERCISE_ST;
+                            this->state = UI_AO_CENTER_DEVICE_ST;
                             TimeEvent_arm(&this->te, (1500 / portTICK_RATE_MS), 0U);
                         }
                         else{
@@ -1013,10 +1037,160 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                 }
             break;
             }
-            case UI_AO_EXECUTE_EXERCISE_ST:{
+             case UI_AO_CENTER_DEVICE_ST:{
                 switch(e->sig){
                     case UI_AO_TIMEOUT_SIG:{
+                        //envio de señal para generar evento a control_AO. Move motor de la base a 0
+                        display_rows("      Centering     ", "       device       ", "                    ", "                    ");
+                        this->state = UI_AO_MOVE_BAR_ST; // esto se va
+                        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);//esto también se va
+                    break;
+                    }
+                    //esta señal es un ack que viene de control_AO después de terminar de centrar  
+                    // case ACK:{
+                    //     this->state = UI_AO_MOVE_BAR_ST;
+                    //     TRIGGER_VOID_EVENT; 
+                    // break;
+                    // }  
 
+                    default:
+                        break;
+                }
+            break;
+            }
+            case UI_AO_MOVE_BAR_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 2){
+                            //enviar señal a control_AO para mover barra horizontal
+                            display_rows("    Positioning     ", "         bar        ", "    horizontally    ", "                    ");  
+                        }
+                        else{
+                            //enviar señal a control_AO para mover barra vertical
+                            display_rows("    Positioning     ", "         bar        ", "     vertically     ", "                    ");
+                        }
+                        this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST; // esto se va
+                        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);//esto también se va
+                        inicio = true;
+                    break;  
+                    }
+                    //esta señal es un ack que viene de control_AO después de terminar de posicionar la barra
+                    // case ACK:{
+                    //     this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST;
+                    //     TRIGGER_VOID_EVENT; 
+                    // break;
+                    // } 
+                    default:
+                        break;
+                }
+            break;
+            }    
+            case UI_AO_MOVE_TO_MIN_ANGLE_ST:{
+                switch ((e->sig)){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(inicio){
+                            change_string(modified_buffer, 0, "Ex. ");
+                            sprintf(char_data,"%ld", selected_exercise + 1);
+                            change_string(modified_buffer, 4, char_data);
+                            change_string(modified_buffer, 7, availableExercises[routine_to_do.ejercicios[selected_exercise].type_of_exercise]);
+                            display_row1(modified_buffer);
+                            display_row4("                    ");
+                            if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 0){
+                                //envio de señal motor aro, min angle
+                                display_row2("Motor aro, min angle");
+
+                            }
+                            else{
+                                //envio de señal motor base, min angle
+                                display_row2("Motor base min angle");
+
+                            }
+                            change_string(modified_buffer, 0, "Current rep.: ");
+                            sprintf(char_data,"%ld", current_repetition + 1);
+                            change_string(modified_buffer, 14, char_data);
+                            display_row3(modified_buffer);  
+                            inicio = false;
+                            counter = routine_to_do.pause;
+                            TimeEvent_arm(&this->te, (3000/ portTICK_RATE_MS), 0U);//esto también se va
+                        }
+                        else{
+                            if(counter>0){
+                                change_string(modified_buffer, 0, "Hold ");
+                                sprintf(char_data,"%ld", counter);
+                                change_string(modified_buffer, 5, char_data);
+                                display_row4(modified_buffer);
+                                counter--;
+                                TimeEvent_arm(&this->te, (1000/ portTICK_RATE_MS), 0U);
+                            }
+                            else{
+                                this->state = UI_AO_MOVE_TO_MAX_ANGLE_ST;
+                                inicio = true;
+                                TRIGGER_VOID_EVENT;
+                            }
+                        }
+                        
+                    break;  
+                    }
+                    //esta señal es un ack que viene de control_AO después de llegar al ángulo mínimo
+                    // case ACK:{                       
+                    //     TRIGGER_VOID_EVENT; 
+                    // break;
+                    // }
+                    default:
+                        break;
+                }            
+            break;
+            }
+            case UI_AO_MOVE_TO_MAX_ANGLE_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(inicio){
+                            if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 0){
+                                //envio de señal motor aro, max angle
+                                display_row2("Motor aro, max angle");
+                                display_row4("                    ");
+                            }
+                            else{
+                                //envio de señal motor base, max angle
+                                display_row2("Motor base max angle");
+
+                            } 
+                            inicio = false;
+                            counter = routine_to_do.pause;
+                            TimeEvent_arm(&this->te, (3000/ portTICK_RATE_MS), 0U);//esto también se va
+                        }
+                        else{
+                            if(counter>0){
+                                change_string(modified_buffer, 0, "Hold ");
+                                sprintf(char_data,"%ld", counter);
+                                change_string(modified_buffer, 5, char_data);
+                                display_row4(modified_buffer);
+                                counter--;
+                                TimeEvent_arm(&this->te, (1000/ portTICK_RATE_MS), 0U);
+                            }
+                            else{
+                                this->state = UI_AO_END_OF_REPETITION_ST;
+                                TRIGGER_VOID_EVENT;
+                            }
+                        }
+                        
+                    break;  
+                    }
+                    //esta señal es un ack que viene de control_AO después de llegar al ángulo mínimo
+                    // case ACK:{                       
+                    //     TRIGGER_VOID_EVENT; 
+                    // break;
+                    // }
+                    default:
+                        break;
+                }
+
+            break;
+            }
+            case UI_AO_END_OF_REPETITION_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        display_row1("End of repetition   ");
                     break;
                     }
 
@@ -1025,9 +1199,9 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                 }
 
 
-
             break;
             }
+
             default:
                 break;
         }
