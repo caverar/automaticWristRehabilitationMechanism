@@ -1,0 +1,33 @@
+.program stepper
+
+; 4 clocks per cycle, then out_freq = desired_pio_freq/4
+
+.wrap_target
+    pull                ; get number of steps
+    mov x osr           ; load number of steps
+
+cycle:
+    set pins, 1 [1]    ; put output high + 1 cycles
+    set pins, 0 [0]    ; put output low + 0 cycles    
+    JMP X-- cycle       ; look if all steps had been executed
+
+.wrap
+
+% c-sdk{
+    void pio_stepper_init(PIO pio, uint sm, uint offset, uint pin, float div){
+        pio_sm_config c = stepper_program_get_default_config(offset); 
+
+        pio_gpio_init(pio, pin);        // Allow pio control GPIO
+
+        sm_config_set_set_pins(&c, pin, 1);   // control via set instruction
+        
+        pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true); // Set pin to output
+
+        // clock divider
+        sm_config_set_clkdiv(&c, div);
+
+        // load configuration and start sm
+        pio_sm_init(pio, sm, offset, &c);
+
+    }
+%}
