@@ -28,7 +28,9 @@
         "time.h": "c",
         "timer.h": "c",
         "stdbool.h": "c",
-        "blinky_ao.h": "c"
+        "blinky_ao.h": "c",
+        "motors_ao.h": "c",
+        "limits": "c"
     },
     "cortex-debug.showRTOS": false,
     "cmake.sourceDirectory": "${workspaceFolder}/.",
