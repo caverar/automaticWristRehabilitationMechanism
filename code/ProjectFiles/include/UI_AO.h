@@ -37,6 +37,7 @@ extern "C" {
 extern Active *AO_printer;
 extern Active *AO_blinkyButton;
 extern Active *AO_UI;
+extern Active *AO_Motors;
 
 /* Constants definitions -----------------------------------------------------*/
 
@@ -56,7 +57,14 @@ enum UI_Signals {
     UI_AO_SW2_PRESSED_SIG,
     UI_AO_SW3_PRESSED_SIG,
     UI_AO_SW4_PRESSED_SIG,
-    UI_AO_SW5_PRESSED_SIG
+    UI_AO_SW5_PRESSED_SIG,
+    //Signals from motors and encoders
+    UI_AO_ACK_CALIB_SIG,
+    UI_AO_ACK_DEG_M1_SIG, //debe crearse un evento que tenga carga
+    UI_AO_ACK_DEG_M2_SIG,
+    UI_AO_ACK_MOVE_SIG,
+    //Error
+    UI_AO_ERROR_SIG
 };
 
 
@@ -81,6 +89,10 @@ typedef struct{
     uint pause;        
 }Routine;
 
+typedef struct{
+    Event super;
+    int16_t angle;       
+}UI_AO_ANGLE_PL;
 
     
 
@@ -101,12 +113,11 @@ typedef struct {
         UI_AO_CONFIG_EXERCISE_ST,
         UI_AO_REPETITIONS_ST,
         UI_AO_POS_BAR_ST,
-        UI_AO_MEASURE_ANGLE,
+        UI_AO_MEASURE_ANGLE_ST,
         UI_AO_TIME_ST,
         UI_AO_EXERCISE_READY_ST,
         UI_AO_BEGIN_ROUTINE_ST,
         UI_AO_SET_PAUSE_ST,
-        UI_AO_SET_AS_DEFAULT_ST,
         UI_AO_DO_DEFAULT_ST,
         UI_AO_CHECK_ROUTINE_ST,
         UI_AO_SEE_PAUSE_ST,
@@ -119,7 +130,9 @@ typedef struct {
         UI_AO_MOVE_TO_MIN_ANGLE_ST,
         UI_AO_MOVE_TO_MAX_ANGLE_ST,
         UI_AO_END_OF_REPETITION_ST,
-        UI_AO_FINISH_ST
+        UI_AO_END_OF_EXERCISE_ST,
+        UI_AO_FINISH_ST,
+        UI_AO_ERROR_ST,
     }state;
 
         // default values

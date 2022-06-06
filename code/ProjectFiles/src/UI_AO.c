@@ -33,6 +33,7 @@
 // Another AO //añado a quien le envío eventos
 
 #include "printer_AO.h"
+//#include "Motors_AO.h" *************************** descomentar esto cuando motor esté
 
 // Project libraries
 #include "bsp.h"
@@ -50,7 +51,7 @@ static UI_State INICIO = {" Choose an option:  ", 2,{" Create Routine     ", " D
 static UI_State CREATE = {" Add exercise       ", 4, {" PronoSupination    ", " FlexoExtension     ", " Ab-,Adduction      ", " Begin Routine      "}};
 static UI_State DO_DEFAULT = {" Default routine:   ", 2, {" Check Routine first", " Do routine now     "}};
 static UI_State CONFIG_EXERCISE = {"Config. ", 5, {" Repetitions: 1     ", " Min. Angle: -20    ", " Max. Angle: 20     ", " Time: 3            ", " Exercise Ready     "}};
-static UI_State BEGIN_ROUTINE = {" Created routine    ", 4,{" Check Routine first", " Do routine now     ", " Set pause betw. ex.", " Set as default rout"}};
+static UI_State BEGIN_ROUTINE = {" Created routine    ", 3,{" Check Routine first", " Do routine now     ", " Set pause betw. ex."}};
 static UI_State CHECK_ROUTINE = {"Check routine:      ", 2, {" See exercises      ", " See pause betw. ex."}};
 static UI_State SHOW_EXERCISES = {"See exercises:      ", 10, {" Exercise 1         ", " Exercise 2         ", " Exercise 3         ", " Exercise 4         ",
                                     " Exercise 5         ", " Exercise 6         ", " Exercise 7         ", " Exercise 8         ", " Exercise 9         ", " Exercise 10        "}};
@@ -73,7 +74,7 @@ int8_t prev_time;
 int8_t prev_pause;
 
 //new angle from encoder
-int8_t new_angle;
+int16_t new_angle;
 
 //counter
 int8_t counter = 5;
@@ -85,9 +86,9 @@ char char_data[3];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {0, 5, -45, 45, 5};
+Exercise default_exercise_1 = {0, 2, -45, 45, 5};
 Exercise default_exercise_2 = {1, 5, -30, 30, 5};
-Exercise default_exercise_3 = {2, 5, -20, 20, 5};
+Exercise default_exercise_3 = {2, 3, -20, 20, 5};
 
 //Selected routine. 0: default routine, 1: created routine
 uint selected_routine = 0;
@@ -97,11 +98,14 @@ uint selected_exercise = 0;
 
 uint current_repetition = 0;
 bool inicio;
+bool inExercise = false;
 
 //Routines
 Routine created_routine;
 Routine default_routine;
 Routine routine_to_do;
+
+int16_t degrees_to_send = 0; 
 
 
 /* AO Class Constructor ------------------------------------------------------*/
@@ -178,24 +182,31 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
         TRIGGER_VOID_EVENT;
         
     }else{
-        // if(e->sig == ERROR_SIG){
+        // if(e->sig == UI_AO_ERROR_SIG){
         //     display_rows("    Error occured   ", "                    ", "   Restart device   ", "                    ");
+        //     inExercise = false;
+        //     this->state = UI_AO_ERROR_ST;
         // }
         if(e->sig == UI_AO_SW5_PRESSED_SIG){
-            if(!pause_active){
-                this->state = UI_AO_PAUSE_ST;
-                pause_active = true;
-            }
-            else{
-                this->state = UI_AO_CENTER_DEVICE_ST;
-                TRIGGER_VOID_EVENT;
-                pause_active = false;
+            if(inExercise){
+                if(!pause_active){
+                    this->state = UI_AO_PAUSE_ST;
+                    pause_active = true;
+                }
+                else{
+                    this->state = UI_AO_CENTER_DEVICE_ST;
+                    TRIGGER_VOID_EVENT;
+                    pause_active = false;
+                }
             }
         }
         switch(this->state){
 
             case UI_AO_PAUSE_ST:{
                 display_rows("System was          ", "paused              ", "                    ", "                    ");              
+            break;
+            }
+            case UI_AO_ERROR_ST:{                             
             break;
             }
             case UI_AO_HOME_ST:{
@@ -244,15 +255,17 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         this->state = UI_AO_INICIO_ST;//esta línea no iría
                         display_rows("                    ", CALIBRATE.title, "                    ", "                    ");
                         TimeEvent_arm(&this->te, (3000 / portTICK_RATE_MS), 0U);//esta tampoco
-                        //enviar desde aquí una señal a control_AO para que genere el evento
+                        
+                        // const Event calib_event = {MOTORS_AO_START_CALIB_SIG};
+                        // Active_post(AO_Motors, (Event*)&calib_event);
+                        
                         break;
                     }
-                    //esta señal es un ack que viene de control_AO después de terminar la calibración    
-                    // case ACK:{
-                    //     this->state = UI_AO_INICIO_ST;
-                    //     TRIGGER_VOID_EVENT; 
-                    //     break;
-                    // }
+                    case UI_AO_ACK_CALIB_SIG:{
+                        this->state = UI_AO_INICIO_ST;
+                        TRIGGER_VOID_EVENT; 
+                    break;
+                    }
                     
                     default:
                         break;
@@ -452,29 +465,31 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     
                     case UI_AO_TIMEOUT_SIG:{
                         if(this->exercise_type == 0 || this-> exercise_type == 1){
-                            //envío de señal a control_AO para mover la barra vertical
-                            display_rows("    Positioning     ", "         bar        ", "     vertically     ", "                    ");
+                        
+                            // static MOTORS_AO_MOVE_PL vertical_movement_event = {MOTORS_AO_MOVE_SIG,M2, 0};
+                            // Active_post(AO_Motors, (Event*)&vertical_movement_event);
+                            display_rows("    Positioning     ", "        bar         ", "     vertically     ", "                    ");
                         }                        
                         else if(this->exercise_type == 2){
-                            //envío de señal a control_AO para mover la barra horizontal
+                            // static MOTORS_AO_MOVE_PL horizontal_movement_event = {MOTORS_AO_MOVE_SIG, M2, -900};
+                            // Active_post(AO_Motors, (Event*)&horizontal_movement_event);
                             display_rows("    Positioning     ", "         bar        ", "    horizontally    ", "                    ");
                         }
-                        this->state = UI_AO_MEASURE_ANGLE;// esto se va
+                        this->state = UI_AO_MEASURE_ANGLE_ST;// esto se va
                         TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);//esto también se va
                     break;
-                    }                    
-                    //esta señal es un ack que viene de control_AO después de terminar el posicionamiento    
-                    // case ACK:{
-                    //     this->state = UI_AO_MEASURE_ANGLE;
-                    //     TRIGGER_VOID_EVENT; 
-                    //     break;
-                    // }  
+                    }                      
+                    case UI_AO_ACK_MOVE_SIG:{
+                        this->state = UI_AO_MEASURE_ANGLE_ST;
+                        TRIGGER_VOID_EVENT; 
+                        break;
+                    }  
                     default:
                         break;
                 }
             break;
             }
-            case UI_AO_MEASURE_ANGLE:{             
+            case UI_AO_MEASURE_ANGLE_ST:{             
                 
                 switch (e->sig){
                     
@@ -489,48 +504,85 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         
                         if(this->exercise_type == 0){
                             printf("Envío de señal para medición de encoder disco\n");
-                            // Enviar señal para que mida posición con encoder del disco.
-                            // El evento que se genera envía cada ms el valor del encoder
-                            // mediante la señal new measure
+                            // Liberamos motor de la manivela
+                            //const Event free_motor2_event = {MOTORS_AO_FREE_M2_SIG};
+                            //Active_post(AO_Motors, (Event*)&free_motor2_event);      
+                            
+                            // Request para el ángulo del disco
+                            //const Event rq_motor2_event = {MOTORS_AO_RQ_DEG_M2_SIG};
+                            //Active_post(AO_Motors, (Event*)&rq_motor2_event);      
+                            
                         }
                         else{
                             printf("Envío de señal para medición de encoder base\n");
-                            // Enviar señal para que mida posición con encoder de la base.
-                            // El evento que se genera envía cada ms el valor del encoder
-                            // mediante la señal new measure
+                            // Liberamos motor de la base
+                            //const Event free_motor1_event = {MOTORS_AO_FREE_M1_SIG};
+                            //Active_post(AO_Motors, (Event*)&free_motor1_event);  
+
+                            // Request para el ángulo de la base
+                            //const Event rq_motor1_event = {MOTORS_AO_RQ_DEG_M1_SIG};
+                            //Active_post(AO_Motors, (Event*)&rq_motor1_event); 
                         }
                     break;
-                    }                    
-                    // case UI_AO_NEW_MEASURE_SIG:{                        
-                    //     guardar ese valor que se recibe en new_angle:
-                    //     sprintf(char_data,"%ld", new_angle);
-                    //     change_string(modified_buffer, 0, char_data);
-                    //     display_row4(modified_buffer);
-                    // break;
-                    // }
+                    }      
+                    case UI_AO_ACK_DEG_M1_SIG:{
+                        new_angle = (((UI_AO_ANGLE_PL*)e)->angle)/10;
+                        sprintf(char_data,"%ld", new_angle);
+                        change_string(modified_buffer, 0, char_data);
+                        display_row4(modified_buffer);
+                        //Request para el ángulo de la base
+                        //const Event rq_motor1_event = {MOTORS_AO_RQ_DEG_M1_SIG};
+                        //Active_post(AO_Motors, (Event*)&rq_motor1_event);                       
+                    break;
+                    }   
+                    case UI_AO_ACK_DEG_M2_SIG:{
+                        new_angle = (((UI_AO_ANGLE_PL*)e)->angle)/10;
+                        sprintf(char_data,"%ld", new_angle);
+                        change_string(modified_buffer, 0, char_data);
+                        display_row4(modified_buffer);
+                        //Request para el ángulo de la manivela
+                        //const Event rq_motor2_event = {MOTORS_AO_RQ_DEG_M2_SIG};
+                        //Active_post(AO_Motors, (Event*)&rq_motor2_event); 
+                    break;
+                    }           
+                    
                     case UI_AO_SW4_PRESSED_SIG:{
+                        this->state = UI_AO_CONFIG_EXERCISE_ST; 
                         printf("\ne\n");
-                        if(angle == 0){
-                            new_angle = -56;//esto es sólo para probar, debe quitarse
+                        if(angle == 0){                            
                             this->min_angle = new_angle;
                             sprintf(char_data,"%ld", this->min_angle);
                             change_string(CONFIG_EXERCISE.options[1], 13, char_data);
                         }
                         else if(angle == 1){
-                            new_angle = 90;//esto es sólo para probar, debe quitarse
                             this->max_angle = new_angle;
                             sprintf(char_data,"%ld", this->max_angle);
                             change_string(CONFIG_EXERCISE.options[2], 13, char_data);
                         }
+                        if(this->exercise_type == 0){
+                            //const Event block_motor2_event = {MOTORS_AO_BLOCK_M2_SIG};
+                            //Active_post(AO_Motors, (Event*)&block_motor2_event);                        
+                        }
+                        else{
+                            //const Event block_motor1_event = {MOTORS_AO_BLOCK_M1_SIG};
+                            //Active_post(AO_Motors, (Event*)&block_motor1_event);  
+                        }
                         i = 0;
-                        this->state = UI_AO_CONFIG_EXERCISE_ST; 
                         TRIGGER_VOID_EVENT;                                       
                     break;
                     }               
                     case UI_AO_SW1_PRESSED_SIG:{
                         printf("\nb\n");
-                        this->state = UI_AO_CONFIG_EXERCISE_ST;               
-                        i = 0;
+                        this->state = UI_AO_CONFIG_EXERCISE_ST; 
+                        if(this->exercise_type == 0){
+                            //const Event block_motor1_event = {MOTORS_AO_BLOCK_M1_SIG};
+                            //Active_post(AO_Motors, (Event*)&block_motor1_event);                        
+                        }
+                        else{
+                            //const Event block_motor2_event = {MOTORS_AO_BLOCK_M2_SIG};
+                            //Active_post(AO_Motors, (Event*)&block_motor2_event);  
+                        }                                      
+                        i = 0;                        
                         TRIGGER_VOID_EVENT;                                           
                     break;
                     } 
@@ -539,6 +591,72 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                 }
             break;
             }
+            // case UI_AO_MEASURE_ANGLE_ST:{             
+                
+            //     switch (e->sig){
+                    
+            //         case UI_AO_TIMEOUT_SIG:{ 
+            //             display_rows(" Move to min. angle ", "if ready press enter", "--------------------", "                    ");                       
+            //             if(angle == 0){
+            //                 display_row1(" Move to min. angle ");                            
+            //             }
+            //             else if(angle == 1){
+            //                 display_row1(" Move to max. angle ");
+            //             }
+                        
+            //             if(this->exercise_type == 0){
+            //                 printf("Envío de señal para medición de encoder disco\n");
+                            
+            //                 // Enviar señal para que mida posición con encoder del disco.
+            //                 // El evento que se genera envía cada ms el valor del encoder
+            //                 // mediante la señal new measure
+            //             }
+            //             else{
+            //                 printf("Envío de señal para medición de encoder base\n");
+            //                 // Enviar señal para que mida posición con encoder de la base.
+            //                 // El evento que se genera envía cada ms el valor del encoder
+            //                 // mediante la señal new measure
+            //             }
+            //         break;
+            //         }                    
+            //         // case UI_AO_NEW_MEASURE_SIG:{                        
+            //         //     guardar ese valor que se recibe en new_angle:
+            //         //     sprintf(char_data,"%ld", new_angle);
+            //         //     change_string(modified_buffer, 0, char_data);
+            //         //     display_row4(modified_buffer);
+            //         // break;
+            //         // }
+            //         case UI_AO_SW4_PRESSED_SIG:{
+            //             printf("\ne\n");
+            //             if(angle == 0){
+            //                 new_angle = -56;//esto es sólo para probar, debe quitarse
+            //                 this->min_angle = new_angle;
+            //                 sprintf(char_data,"%ld", this->min_angle);
+            //                 change_string(CONFIG_EXERCISE.options[1], 13, char_data);
+            //             }
+            //             else if(angle == 1){
+            //                 new_angle = 90;//esto es sólo para probar, debe quitarse
+            //                 this->max_angle = new_angle;
+            //                 sprintf(char_data,"%ld", this->max_angle);
+            //                 change_string(CONFIG_EXERCISE.options[2], 13, char_data);
+            //             }
+            //             i = 0;
+            //             this->state = UI_AO_CONFIG_EXERCISE_ST; 
+            //             TRIGGER_VOID_EVENT;                                       
+            //         break;
+            //         }               
+            //         case UI_AO_SW1_PRESSED_SIG:{
+            //             printf("\nb\n");
+            //             this->state = UI_AO_CONFIG_EXERCISE_ST;               
+            //             i = 0;
+            //             TRIGGER_VOID_EVENT;                                           
+            //         break;
+            //         } 
+            //         default:
+            //             break; 
+            //     }
+            // break;
+            // }
             case UI_AO_TIME_ST:{              
 
                 switch (e->sig){
@@ -676,10 +794,6 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                                 this->state = UI_AO_SET_PAUSE_ST;
                             break;
                             }
-                            case 3:{
-                                this->state = UI_AO_SET_AS_DEFAULT_ST;
-                            break;
-                            }
                             default:
                                 break;
                         }
@@ -754,66 +868,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     default:
                         break;
                 }
-
-
                 break;
-            }
-
-            case UI_AO_SET_AS_DEFAULT_ST:{
-                switch(e->sig){
-                    case UI_AO_TIMEOUT_SIG:{ 
-                        printf("Previous created routine: \n");
-                        for(int i = 0; i<created_routine.num_ejercicios; i++){
-                                    printf("Exercise %d:\n", i);
-                                    printf("tipo: %d\n",created_routine.ejercicios[i].type_of_exercise);
-                                    printf("reps: %d\n",created_routine.ejercicios[i].num_of_reps);
-                                    printf("min: %d\n",created_routine.ejercicios[i].lim_min);
-                                    printf("max: %d\n",created_routine.ejercicios[i].lim_max);
-                                    printf("secs: %d\n",created_routine.ejercicios[i].time_pos);
-                        }
-                        printf("Pause previous created routine: %d\n\n", created_routine.pause);
-                        printf("Previous default routine: \n");
-                        for(int i = 0; i< default_routine.num_ejercicios; i++){
-                                    printf("Exercise %d:\n", i);
-                                    printf("tipo: %d\n",default_routine.ejercicios[i].type_of_exercise);
-                                    printf("reps: %d\n",default_routine.ejercicios[i].num_of_reps);
-                                    printf("min: %d\n",default_routine.ejercicios[i].lim_min);
-                                    printf("max: %d\n",default_routine.ejercicios[i].lim_max);
-                                    printf("secs: %d\n",default_routine.ejercicios[i].time_pos);
-                        }
-                        printf("Pause previous default routine: %d\n\n", default_routine.pause);
-                        default_routine = created_routine;
-                        printf("----------------------\nAfter created routine: \n");
-                        for(int i = 0; i<created_routine.num_ejercicios; i++){
-                                    printf("Exercise %d:\n", i);
-                                    printf("tipo: %d\n",created_routine.ejercicios[i].type_of_exercise);
-                                    printf("reps: %d\n",created_routine.ejercicios[i].num_of_reps);
-                                    printf("min: %d\n",created_routine.ejercicios[i].lim_min);
-                                    printf("max: %d\n",created_routine.ejercicios[i].lim_max);
-                                    printf("secs: %d\n",created_routine.ejercicios[i].time_pos);
-                        }
-                        printf("Pause after created routine: %d\n\n", created_routine.pause);
-                        printf("After default routine: \n");
-                        for(int i = 0; i< default_routine.num_ejercicios; i++){
-                                    printf("Exercise %d:\n", i);
-                                    printf("tipo: %d\n",default_routine.ejercicios[i].type_of_exercise);
-                                    printf("reps: %d\n",default_routine.ejercicios[i].num_of_reps);
-                                    printf("min: %d\n",default_routine.ejercicios[i].lim_min);
-                                    printf("max: %d\n",default_routine.ejercicios[i].lim_max);
-                                    printf("secs: %d\n",default_routine.ejercicios[i].time_pos);
-                        }
-                        printf("Pause after default routine: %d\n\n", default_routine.pause); 
-                        display_rows("  Created  routine  ", "      was  set      ", " as default routine ", "                    ");                        
-                        this->state = UI_AO_BEGIN_ROUTINE_ST;
-                        TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U);   
-
-                    break;
-                    }
-                    default:
-                        break;
-                }
-
-            break;
             }
             case UI_AO_DO_DEFAULT_ST:{
                 switch(e->sig){
@@ -1040,19 +1095,21 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
              case UI_AO_CENTER_DEVICE_ST:{
                 switch(e->sig){
                     case UI_AO_TIMEOUT_SIG:{
-                        //envio de señal para generar evento a control_AO. Move motor de la base a 0
                         display_rows("      Centering     ", "       device       ", "                    ", "                    ");
+                        // static MOTORS_AO_MOVE_PL center_movement_event = {MOTORS_AO_MOVE_SIG, M1, 0};
+                        // Active_post(AO_Motors, (Event*)&center_movement_event);
+                            
+                        
                         this->state = UI_AO_MOVE_BAR_ST; // esto se va
-                        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);//esto también se va
+                        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U); // esto también se va
+                        inExercise = true;
                     break;
                     }
-                    //esta señal es un ack que viene de control_AO después de terminar de centrar  
-                    // case ACK:{
-                    //     this->state = UI_AO_MOVE_BAR_ST;
-                    //     TRIGGER_VOID_EVENT; 
-                    // break;
-                    // }  
-
+                    case UI_AO_ACK_MOVE_SIG:{
+                        this->state = UI_AO_MEASURE_ANGLE_ST;
+                        TRIGGER_VOID_EVENT; 
+                    break;
+                    }                     
                     default:
                         break;
                 }
@@ -1062,11 +1119,13 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                 switch(e->sig){
                     case UI_AO_TIMEOUT_SIG:{
                         if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 2){
-                            //enviar señal a control_AO para mover barra horizontal
+                            // static MOTORS_AO_MOVE_PL horizontal_movement_event2 = {MOTORS_AO_MOVE_SIG,M2, -900};
+                            // Active_post(AO_Motors, (Event*)&horizontal_movement_event2);
                             display_rows("    Positioning     ", "         bar        ", "    horizontally    ", "                    ");  
                         }
                         else{
-                            //enviar señal a control_AO para mover barra vertical
+                            // static MOTORS_AO_MOVE_PL vertical_movement_event2 = {MOTORS_AO_MOVE_SIG,M2, 0};
+                            // Active_post(AO_Motors, (Event*)&vertical_movement_event2);
                             display_rows("    Positioning     ", "         bar        ", "     vertically     ", "                    ");
                         }
                         this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST; // esto se va
@@ -1074,12 +1133,11 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         inicio = true;
                     break;  
                     }
-                    //esta señal es un ack que viene de control_AO después de terminar de posicionar la barra
-                    // case ACK:{
-                    //     this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST;
-                    //     TRIGGER_VOID_EVENT; 
-                    // break;
-                    // } 
+                    case UI_AO_ACK_MOVE_SIG:{
+                        this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST;
+                        TRIGGER_VOID_EVENT; 
+                    break;
+                    } 
                     default:
                         break;
                 }
@@ -1088,7 +1146,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             case UI_AO_MOVE_TO_MIN_ANGLE_ST:{
                 switch ((e->sig)){
                     case UI_AO_TIMEOUT_SIG:{
-                        if(inicio){
+                        degrees_to_send = routine_to_do.ejercicios[selected_exercise].lim_min * 10;
+                        if(inicio){                            
                             change_string(modified_buffer, 0, "Ex. ");
                             sprintf(char_data,"%ld", selected_exercise + 1);
                             change_string(modified_buffer, 4, char_data);
@@ -1096,11 +1155,16 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             display_row1(modified_buffer);
                             display_row4("                    ");
                             if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 0){
-                                //envio de señal motor aro, min angle
+                                
+                                // static MOTORS_AO_MOVE_PL min_angle_M2_movement_event = {MOTORS_AO_MOVE_SIG, M2, degrees_to_send};
+                                // Active_post(AO_Motors, (Event*)&min_angle_M2_movement_event);
                                 display_row2("Motor aro, min angle");
 
                             }
                             else{
+                                // static MOTORS_AO_MOVE_PL min_angle_M1_movement_event = {MOTORS_AO_MOVE_SIG, M1, degrees_to_send};
+                                // Active_post(AO_Motors, (Event*)&min_angle_M1_movement_event);
+                                
                                 //envio de señal motor base, min angle
                                 display_row2("Motor base min angle");
 
@@ -1110,7 +1174,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             change_string(modified_buffer, 14, char_data);
                             display_row3(modified_buffer);  
                             inicio = false;
-                            counter = routine_to_do.pause;
+                            counter = routine_to_do.ejercicios[selected_exercise].time_pos;
                             TimeEvent_arm(&this->te, (3000/ portTICK_RATE_MS), 0U);//esto también se va
                         }
                         else{
@@ -1125,17 +1189,17 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             else{
                                 this->state = UI_AO_MOVE_TO_MAX_ANGLE_ST;
                                 inicio = true;
+                                display_row4("                    ");
                                 TRIGGER_VOID_EVENT;
                             }
                         }
                         
                     break;  
                     }
-                    //esta señal es un ack que viene de control_AO después de llegar al ángulo mínimo
-                    // case ACK:{                       
-                    //     TRIGGER_VOID_EVENT; 
-                    // break;
-                    // }
+                    case UI_AO_ACK_MOVE_SIG:{
+                        TRIGGER_VOID_EVENT; 
+                    break;
+                    } 
                     default:
                         break;
                 }            
@@ -1144,19 +1208,23 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             case UI_AO_MOVE_TO_MAX_ANGLE_ST:{
                 switch(e->sig){
                     case UI_AO_TIMEOUT_SIG:{
+                        degrees_to_send = routine_to_do.ejercicios[selected_exercise].lim_max * 10;
                         if(inicio){
                             if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 0){
-                                //envio de señal motor aro, max angle
+                                // static MOTORS_AO_MOVE_PL max_angle_M2_movement_event = {MOTORS_AO_MOVE_SIG,M2, degrees_to_send};
+                                // Active_post(AO_Motors, (Event*)&max_angle_M2_movement_event);
                                 display_row2("Motor aro, max angle");
-                                display_row4("                    ");
+                                
                             }
                             else{
-                                //envio de señal motor base, max angle
+                                // static MOTORS_AO_MOVE_PL max_angle_M1_movement_event = {MOTORS_AO_MOVE_SIG, M1, degrees_to_send};
+                                // Active_post(AO_Motors, (Event*)&max_angle_M1_movement_event);
+                                
                                 display_row2("Motor base max angle");
 
                             } 
                             inicio = false;
-                            counter = routine_to_do.pause;
+                            counter = routine_to_do.ejercicios[selected_exercise].time_pos;
                             TimeEvent_arm(&this->te, (3000/ portTICK_RATE_MS), 0U);//esto también se va
                         }
                         else{
@@ -1170,12 +1238,17 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             }
                             else{
                                 this->state = UI_AO_END_OF_REPETITION_ST;
+                                inicio = true;
                                 TRIGGER_VOID_EVENT;
                             }
                         }
                         
                     break;  
                     }
+                    case UI_AO_ACK_MOVE_SIG:{
+                        TRIGGER_VOID_EVENT; 
+                    break;
+                    } 
                     //esta señal es un ack que viene de control_AO después de llegar al ángulo mínimo
                     // case ACK:{                       
                     //     TRIGGER_VOID_EVENT; 
@@ -1190,18 +1263,54 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             case UI_AO_END_OF_REPETITION_ST:{
                 switch(e->sig){
                     case UI_AO_TIMEOUT_SIG:{
-                        display_row1("End of repetition   ");
+                        if(current_repetition + 1 < routine_to_do.ejercicios[selected_exercise].num_of_reps){
+                            current_repetition++;
+                            this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST;
+                            TRIGGER_VOID_EVENT;
+                        }
+                        else if(selected_exercise + 1 < routine_to_do.num_ejercicios){
+                            selected_exercise ++;
+                            current_repetition = 0;
+                            counter = routine_to_do.pause;
+                            this->state = UI_AO_END_OF_EXERCISE_ST;
+                            TRIGGER_VOID_EVENT;
+                            
+                        }
+                        else{
+                            display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "    See you soon    ");
+                        }
                     break;
                     }
+                    default:
+                        break;
+                }
+            break;
+            }
+            case UI_AO_END_OF_EXERCISE_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        display_rows("    Pause before    ", "   next  exercise   ", "                    ", "                    ");
+                        if(counter>0){
+                            change_string(modified_buffer, 0, "Beginning in ");
+                            sprintf(char_data,"%ld", counter);
+                            change_string(modified_buffer, 13, char_data);
+                            display_row4(modified_buffer);
+                            counter--;
+                            TimeEvent_arm(&this->te, (1000/ portTICK_RATE_MS), 0U);
+                        }
+                        else{
+                            this->state = UI_AO_CENTER_DEVICE_ST;                                
+                            TRIGGER_VOID_EVENT;
+                        }
+                    break;
+                    }
+
 
                     default:
                         break;
                 }
-
-
             break;
             }
-
             default:
                 break;
         }
@@ -1256,35 +1365,26 @@ void display_inicio(UI_State estado){
 }
 
 
-void display_plus_button(UI_State estado){
-//change plus and minus to modify just the last two rows   
-    printf("boton +\n");    
+void display_plus_button(UI_State estado){    
     if(i <  estado.num_of_options-1){
-        printf("Entramos a +");
         select_option(estado.options[i+1]);
         display_row3(estado.options[i]);
         display_row4(modified_buffer);
         i++;        
-    } 
-    printf("i is: %d\n", i);   
+    }  
 }
-void display_minus_button(UI_State estado){
-//change plus and minus to modify just the last two rows       
-    printf("boton -\n");  
+void display_minus_button(UI_State estado){    
     if(i > 0){
-        printf("Entramos a -");
         select_option(estado.options[i-1]);
         display_row3(modified_buffer);
         display_row4(estado.options[i]);
         i--;        
     }  
-    printf("i is: %d\n", i);  
 }                
 
 void select_option(char option[20]){
     memcpy(modified_buffer, option, 20);
     modified_buffer[0] = '*';
-    printf("Opcion seleccionada: %d\n%s\n", strlen(modified_buffer), modified_buffer);
 }
 
 
