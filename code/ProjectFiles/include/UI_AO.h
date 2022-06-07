@@ -60,7 +60,7 @@ enum UI_Signals {
     UI_AO_SW5_PRESSED_SIG,
     //Signals from motors and encoders
     UI_AO_ACK_CALIB_SIG,
-    UI_AO_ACK_DEG_M1_SIG, //debe crearse un evento que tenga carga
+    UI_AO_ACK_DEG_M1_SIG, 
     UI_AO_ACK_DEG_M2_SIG,
     UI_AO_ACK_MOVE_SIG,
     //Error
@@ -145,8 +145,8 @@ typedef struct {
     // exercise parameters
 
     int8_t reps;
-    int8_t min_angle;
-    int8_t max_angle;
+    int16_t min_angle;
+    int16_t max_angle;
     int8_t time_in_position;
     int8_t pause_between_exercises;
 

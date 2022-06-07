@@ -16,6 +16,8 @@ add_executable(${PROJECT_NAME}
     src/printer_AO.c
     src/dev_hd44780.c
     src/UI_AO.c
+    src/Motors_AO.c
+    src/AS5600.c
 )
 
 # Create map/bin/hex/uf2 files.
@@ -28,8 +30,10 @@ target_link_libraries(
     hardware_i2c
     hardware_timer
     hardware_adc
+    hardware_pio
     freertos
     freeact
+    pio_stepper
 )
 
 
