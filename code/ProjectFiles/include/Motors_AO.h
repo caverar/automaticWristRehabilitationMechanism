@@ -24,14 +24,14 @@ extern "C" {
 
 // SDK Libraries
 #include "pico/stdlib.h"
-//#include "hardware/pio.h" // doesn't work :(
+#include "hardware/pio.h" // doesn't work :(
 //#include "hardware/gpio.h"
 
 // FreeAct
 #include <FreeAct.h>
 
 // Project libraries
-//#include "pio_stepper.h" //doens't work :(
+#include "pio_stepper.h" //doens't work :(
 #include "AS5600.h"
 
 /* External AO calls --- -----------------------------------------------------*/

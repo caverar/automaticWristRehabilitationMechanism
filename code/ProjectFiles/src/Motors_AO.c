@@ -17,15 +17,15 @@
 #include <stdbool.h>
 
 // SDK Libraries
-//#include "pico/stdlib.h"
-//#include "hardware/pio.h"
+#include "pico/stdlib.h"
+#include "hardware/pio.h"
 //#include "hardware/gpio.h"
 
 // FreeAct
 #include <FreeAct.h>
 
 // Project libraries
-//#include "pio_stepper.h"
+#include "pio_stepper.h"
 #include "AS5600.h"
 
 // Another AO /
