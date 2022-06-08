@@ -45,7 +45,7 @@
 
 
 // Global UI_States variables
-static UI_State HOME = {" ***  Welcome! u*** "};
+static UI_State HOME = {" ***  Welcome!  *** "};
 static UI_State CALIBRATE = {"    Calibrating...  "};
 static UI_State INICIO = {" Choose an option:  ", 2,{" Create Routine     ", " Do default routine "}};
 static UI_State CREATE = {" Add exercise       ", 4, {" PronoSupination    ", " FlexoExtension     ", " Ab-,Adduction      ", " Begin Routine      "}};
@@ -86,9 +86,9 @@ char char_data[3];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {0, 2, -45, 45, 5};
-Exercise default_exercise_2 = {1, 1, -30, 30, 3};
-Exercise default_exercise_3 = {2, 3, -20, 20, 2};
+Exercise default_exercise_1 = {0, 2, -450, 450, 5};
+Exercise default_exercise_2 = {1, 1, -300, 300, 3};
+Exercise default_exercise_3 = {2, 3, -200, 200, 2};
 
 //Selected routine. 0: default routine, 1: created routine
 uint selected_routine = 0;
@@ -155,7 +155,6 @@ void UI_ctor(UI * const this){
     created_routine.num_ejercicios = 0;
     created_routine.pause = this->pause_between_exercises;
 
-    //How to do this? Memory
     //initial parameters for default routine
     default_routine.num_ejercicios = 3;
     default_routine.pause = this->pause_between_exercises;
@@ -510,7 +509,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     case UI_AO_ACK_DEG_M1_SIG:{
                         printf("Ack received from motors deg M1\n");
                         new_angle = (((UI_AO_ANGLE_PL*)e)->angle);
-                        sprintf(char_data,"%ld", new_angle);
+                        printf("Angle received M1: %d", new_angle);
+                        sprintf(char_data,"%ld", new_angle/10);
                         change_string(modified_buffer, 0, char_data);
                         display_row4(modified_buffer);
                         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -522,8 +522,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     case UI_AO_ACK_DEG_M2_SIG:{
                         printf("Ack received from motors deg M2\n");
                         new_angle = (((UI_AO_ANGLE_PL*)e)->angle);
-                        printf("Angle received: %d", new_angle);
-                        sprintf(char_data,"%ld", new_angle);
+                        printf("Angle received M2: %d", new_angle);
+                        sprintf(char_data,"%ld", new_angle/10);
                         change_string(modified_buffer, 0, char_data);
                         display_row4(modified_buffer);
                         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -536,12 +536,12 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         printf("Enter pressed\nAngle to save: %d\n", new_angle);
                         if(angle == 0){                            
                             this->min_angle = new_angle;
-                            sprintf(char_data,"%ld", this->min_angle);
+                            sprintf(char_data,"%ld", this->min_angle/10);
                             change_string(CONFIG_EXERCISE.options[1], 13, char_data);
                         }
                         else if(angle == 1){
                             this->max_angle = new_angle;
-                            sprintf(char_data,"%ld", this->max_angle);
+                            sprintf(char_data,"%ld", this->max_angle/10);
                             change_string(CONFIG_EXERCISE.options[2], 13, char_data);
                         }
                         if(this->exercise_type == 0){
@@ -1045,9 +1045,10 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             }    
             case UI_AO_MOVE_TO_MIN_ANGLE_ST:{
                 switch ((e->sig)){
-                    case UI_AO_TIMEOUT_SIG:{
-                        degrees_to_send = routine_to_do.ejercicios[selected_exercise].lim_min * 10;
-                        if(inicio){                            
+                    case UI_AO_TIMEOUT_SIG:{                        
+                        if(inicio){    
+                            degrees_to_send = routine_to_do.ejercicios[selected_exercise].lim_min;
+                            printf("Degrees to send min: %d\n", degrees_to_send);                        
                             change_string(modified_buffer, 0, "Ex. ");
                             sprintf(char_data,"%ld", selected_exercise + 1);
                             change_string(modified_buffer, 4, char_data);
@@ -1096,7 +1097,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     break;  
                     }
                     case UI_AO_ACK_MOVE_SIG:{
-                        printf("ack min pos achieved from motors");
+                        printf("ACK MIN POS\n");
                         TRIGGER_VOID_EVENT; 
                     break;
                     } 
@@ -1107,9 +1108,10 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             }
             case UI_AO_MOVE_TO_MAX_ANGLE_ST:{
                 switch(e->sig){
-                    case UI_AO_TIMEOUT_SIG:{
-                        degrees_to_send = routine_to_do.ejercicios[selected_exercise].lim_max * 10;
+                    case UI_AO_TIMEOUT_SIG:{                        
                         if(inicio){
+                            degrees_to_send = routine_to_do.ejercicios[selected_exercise].lim_max;
+                            printf("Degrees to send max: %d\n", degrees_to_send);
                             if(routine_to_do.ejercicios[selected_exercise].type_of_exercise == 0){
                                 static MOTORS_AO_MOVE_PL max_angle_M2_movement_event = {MOTORS_AO_MOVE_SIG,M2};
                                 max_angle_M2_movement_event.degrees = degrees_to_send;
@@ -1145,6 +1147,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     break;  
                     }
                     case UI_AO_ACK_MOVE_SIG:{
+                        printf("ACK MAX POS\n");
                         TRIGGER_VOID_EVENT; 
                     break;
                     } 

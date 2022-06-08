@@ -78,8 +78,8 @@ typedef struct{
 typedef struct{
     uint type_of_exercise;
     uint num_of_reps;
-    int8_t lim_min;
-    uint lim_max;
+    int16_t lim_min;
+    int16_t lim_max;
     uint time_pos;          
 }Exercise;
 
