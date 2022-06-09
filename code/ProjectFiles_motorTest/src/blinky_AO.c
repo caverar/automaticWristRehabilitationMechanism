@@ -57,6 +57,7 @@ void BlinkyButton_ctor(BlinkyButton * const this){
     
     // Time events construction
     TimeEvent_ctor(&this->te, BLINKY_AO_TIMEOUT_SIG, &this->super);
+    TimeEvent_ctor(&this->te2, BLINKY_AO_TIMEOUT2_SIG, &this->super);
     
     // State Machine initialization
     this->state = BLINKY_AO_START_ST;
@@ -88,16 +89,33 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
                                   Event const * const e){
     // Initial event
     if(e->sig == INIT_SIG){
-        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);
-        
-        
-    }else if(e->sig ==BLINKY_AO_TIMEOUT_SIG){
 
-        static MOTORS_AO_MOVE_PL movement_event = {MOTORS_AO_MOVE_SIG,M1,60};
-        Active_post(AO_Motors, (Event*)&movement_event);
+        static const Event start_motors_event = {MOTORS_AO_START_CALIB_SIG};
+        Active_post(AO_Motors, &start_motors_event);
+
+
+    }else if(e->sig == UI_AO_ACK_CALIB_SIG){
+
+        TimeEvent_arm(&this->te, (100 / portTICK_RATE_MS), 0U);
         
 
-        TimeEvent_arm(&this->te, (500 / portTICK_RATE_MS), 0U);
+    }else if(e->sig == BLINKY_AO_TIMEOUT_SIG){
+    //     static MOTORS_AO_MOVE_PL move_motor1_event = {MOTORS_AO_MOVE_SIG,
+    //                                                         M1,0};
+    //     Active_post(AO_Motors, (Event*)&move_motor1_event);
+
+    // }else if(e->sig == UI_AO_ACK_MOVE_SIG){
+        static const Event free_motors_event = {MOTORS_AO_FREE_M1_SIG};
+        Active_post(AO_Motors, (Event*)&free_motors_event);
+        TimeEvent_arm(&this->te2, (1000 / portTICK_RATE_MS), 0U);
+
+    }else if(e->sig == BLINKY_AO_TIMEOUT2_SIG){
+        static const Event get_angle_event = {MOTORS_AO_RQ_DEG_M1_SIG};
+        Active_post(AO_Motors, (Event*)&get_angle_event);
+        TimeEvent_arm(&this->te2, (100 / portTICK_RATE_MS), 0U);
+
+    }else if(e->sig == UI_AO_ACK_DEG_M1_SIG){
+        printf("Angulo AO: %d\n",((UI_AO_ANGLE_PL*)e)->angle);
     }
 
 }

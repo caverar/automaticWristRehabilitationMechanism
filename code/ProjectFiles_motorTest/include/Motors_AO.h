@@ -84,11 +84,13 @@ extern Active *AO_blinkyButton;
 #define MOTOR2_FULL_RANGE_STEPS 200     // Number of steps in valid range
 
 
-#define MOTOR1_CW_DIR  0
-#define MOTOR1_CCW_DIR 1
+#define MOTOR1_CW_DIR  0    //(+)
+#define MOTOR1_CCW_DIR 1    //(-)
+#define ENCODER1_CW_DIR 0
 
-#define MOTOR2_CW_DIR  0
-#define MOTOR2_CCW_DIR 1
+#define MOTOR2_CW_DIR  0    //(+)
+#define MOTOR2_CCW_DIR 1    //(-)
+#define ENCODER2_CW_DIR 1
 
 
 
@@ -101,20 +103,18 @@ enum Motors_Signals{
     MOTORS_AO_START_CALIB_SIG,          // Calibration
     //-->UI_AO_ACK_CALIB_SIG
 
-    MOTOR_AO_FREE_M1_SIG,               // Free motor 1
-    MOTOR_AO_FREE_M2_SIG,               // Free motor 2
+    MOTORS_AO_FREE_M1_SIG,               // Free motor 1
+    MOTORS_AO_FREE_M2_SIG,               // Free motor 2
     
-    MOTOR_AO_RQ_DEG_M1_SIG 
+    MOTORS_AO_RQ_DEG_M1_SIG, 
     //-->UI_AO_ACK_DEG_M1_SIG
 
-    MOTOR_AO_RQ_DEG_M2_SIG
+    MOTORS_AO_RQ_DEG_M2_SIG,
     //-->UI_AO_ACK_DEG_M2_SIG
 
-    MOTOR_AO_BLOCK_M1_SIG
-    MOTOR_AO_BLOCK_M2_SIG
+    MOTORS_AO_BLOCK_M1_SIG,
+    MOTORS_AO_BLOCK_M2_SIG,
     
-    MOTOR_AO_FREE_M1_SIG,  
-    MOTOR_AO_FREE_M1_SIG,  
     
     MOTORS_AO_MOVE_SIG,                 // Move
     //-->UI_AO_ACK_MOVE_SIG
@@ -124,7 +124,7 @@ enum Motors_Signals{
 typedef struct{
     Event super;                        // Inherit from Event base class
     enum{M1, M2}motor;
-    int16_t degrees;                   // en decimas de grado
+    int16_t degrees;                    // en decimas de grado
 }MOTORS_AO_MOVE_PL;
 
 
@@ -136,13 +136,10 @@ typedef enum {
     MOTORS_AO_CENTER_M2_ST,
 
     MOTORS_AO_FREE_M1_ST,
-    MOTORS_AO_FREE_M2_ST, 
-
-   
+    MOTORS_AO_FREE_M2_ST,
 
     MOTORS_AO_MOVE_M1_ST,
     MOTORS_AO_MOVE_M2_ST,
-
 
     MOTORS_AO_WAITING_ST
 }Motors_AO_state;
@@ -157,8 +154,16 @@ typedef struct{
     uint16_t encoder1_zero;
     uint16_t encoder2_zero;
 
-    uint16_t centering_steps;
-    uint16_t movement_steps;
+    int32_t encoder1_current_angle;
+    int16_t encoder2_current_angle;
+    int16_t encoder1_turns;
+    int16_t encoder2_turns;
+    uint16_t encoder1_last_read;
+    uint16_t encoder2_last_read;
+
+
+    uint16_t centering_steps;           // Number of steps to do centering
+    uint16_t movement_steps;            // Number of steps to do movement
     bool movement_dir;
 
     float motor1_current_position;

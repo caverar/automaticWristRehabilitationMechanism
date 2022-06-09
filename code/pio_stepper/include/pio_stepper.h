@@ -52,7 +52,6 @@ void StepperMotor_disable(StepperMotor* this);
 void StepperMotor_enable(StepperMotor* this);
 
 
-
 void StepperMotor_move(StepperMotor* this,
                        uint8_t dir, 
                        uint32_t _steps_frequency,

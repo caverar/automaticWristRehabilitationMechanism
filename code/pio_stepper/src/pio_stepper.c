@@ -71,6 +71,8 @@ void StepperMotor_enable(StepperMotor* this){
     gpio_put(this->enable_pin, false);
 }
 
+
+
 void StepperMotor_move(StepperMotor* this,
                        uint8_t dir, 
                        uint32_t _steps_frequency,
@@ -81,7 +83,7 @@ void StepperMotor_move(StepperMotor* this,
     this->steps_pending = _steps_pending;
     this->current_direction = dir;
 
-
+    gpio_put(this->dir_pin, dir);
     float div = (float)clock_get_hz(clk_sys) / (this->steps_frequency*4);
     pio_sm_set_clkdiv(this->pio,this->sm,div);
     

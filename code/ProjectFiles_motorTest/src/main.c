@@ -66,22 +66,22 @@ int main(){
     BSP_init();
 
     /* create and start the BlinkyButton AO */
-    // BlinkyButton_ctor(&blinkyButton);
-    // Active_start(AO_blinkyButton,
-    //              1U,
-    //              blinkyButton_queue,
-    //              sizeof(blinkyButton_queue)/sizeof(blinkyButton_queue[0]),
-    //              blinkyButton_stack,
-    //              sizeof(blinkyButton_stack),
-    //              0U);
+    BlinkyButton_ctor(&blinkyButton);
+    Active_start(AO_blinkyButton,
+                 1U,
+                 blinkyButton_queue,
+                 sizeof(blinkyButton_queue)/sizeof(blinkyButton_queue[0]),
+                 blinkyButton_stack,
+                 sizeof(blinkyButton_stack),
+                 0U);
 
     Motors_ctor(&motors);
     Active_start(AO_Motors,
                  1U,
                  motors_queue,
                  sizeof(motors_queue)/sizeof(motors_queue[0]),
-                 blinkyButton_stack,
-                 sizeof(blinkyButton_stack),
+                 motors_stack,
+                 sizeof(motors_stack),
                  0U);
 
 

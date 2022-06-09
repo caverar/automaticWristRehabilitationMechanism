@@ -30,7 +30,8 @@
         "stdbool.h": "c",
         "blinky_ao.h": "c",
         "motors_ao.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "pio_stepper.h": "c"
     },
     "cortex-debug.showRTOS": false,
     "cmake.sourceDirectory": "${workspaceFolder}/.",

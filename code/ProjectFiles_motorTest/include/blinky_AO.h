@@ -46,20 +46,30 @@ extern Active *AO_blinkyButton;
 
 enum blinky_Signals {
     BLINKY_AO_TIMEOUT_SIG = USER_SIG,    // First Signals must replace USER_SIG
+    BLINKY_AO_TIMEOUT2_SIG,
     // User Signals
     BLINKY_AO_SW1_PRESSED_SIG,
     BLINKY_AO_SW2_PRESSED_SIG,
     BLINKY_AO_SW3_PRESSED_SIG,
     BLINKY_AO_SW4_PRESSED_SIG,
-    BLINKY_AO_SW5_PRESSED_SIG
+    BLINKY_AO_SW5_PRESSED_SIG,
+    UI_AO_ACK_CALIB_SIG,
+    UI_AO_ACK_MOVE_SIG,
+    UI_AO_ACK_DEG_M1_SIG,
+    UI_AO_ACK_DEG_M2_SIG
 };
 
+typedef struct{
+    Event super;
+    int16_t angle;       
+}UI_AO_ANGLE_PL;
 
 /* AO Class Data -------------------------------------------------------------*/
 typedef struct {
     Active super;               // Inherit from Active Object base class
 
     TimeEvent te;               // Add TimeEvent to the AO
+    TimeEvent te2;
 
     /* add private data (local variables) for the AO... */
     enum{
