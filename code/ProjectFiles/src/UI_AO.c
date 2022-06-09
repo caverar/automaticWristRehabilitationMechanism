@@ -82,6 +82,10 @@ int8_t counter = 3;
 //used to save numerical value in char value
 char char_data[3];
 
+//error messages
+char error_message1[20];
+char error_message2[20];
+
 //pause active
 bool pause_active = false;
 
@@ -182,7 +186,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
         
     }else{
         if(e->sig == UI_AO_ERROR_SIG){
-            display_rows("    Error occured   ", "                    ", "   Restart device   ", "                    ");
+            change_string(modified_buffer, 0, ((UI_AO_ERROR_PL*)e)->error_message);            
+            display_rows("    Error occured   ", modified_buffer, "                    ", " Restart device     ");
             inExercise = false;
             this->state = UI_AO_ERROR_ST;
         }

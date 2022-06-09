@@ -24,19 +24,20 @@ extern "C" {
 
 // SDK Libraries
 #include "pico/stdlib.h"
-#include "hardware/pio.h"
+#include "hardware/pio.h" // doesn't work :(
 //#include "hardware/gpio.h"
 
 // FreeAct
 #include <FreeAct.h>
 
 // Project libraries
-#include "pio_stepper.h"
+#include "pio_stepper.h" //doens't work :(
 #include "AS5600.h"
 
 /* External AO calls --- -----------------------------------------------------*/
 
 extern Active *AO_blinkyButton;
+extern Active *AO_UI;
 
 /* Constants definitions -----------------------------------------------------*/
 
@@ -84,13 +85,11 @@ extern Active *AO_blinkyButton;
 #define MOTOR2_FULL_RANGE_STEPS 200     // Number of steps in valid range
 
 
-#define MOTOR1_CW_DIR  0    //(+)
-#define MOTOR1_CCW_DIR 1    //(-)
-#define ENCODER1_CW_DIR 0
+#define MOTOR1_CW_DIR  0
+#define MOTOR1_CCW_DIR 1
 
-#define MOTOR2_CW_DIR  0    //(+)
-#define MOTOR2_CCW_DIR 1    //(-)
-#define ENCODER2_CW_DIR 1
+#define MOTOR2_CW_DIR  0
+#define MOTOR2_CCW_DIR 1
 
 
 
@@ -116,7 +115,7 @@ enum Motors_Signals{
     MOTORS_AO_BLOCK_M2_SIG,
     
     
-    MOTORS_AO_MOVE_SIG,                 // Move
+    MOTORS_AO_MOVE_SIG                 // Move
     //-->UI_AO_ACK_MOVE_SIG
     // Motor2
 };
@@ -124,7 +123,7 @@ enum Motors_Signals{
 typedef struct{
     Event super;                        // Inherit from Event base class
     enum{M1, M2}motor;
-    int16_t degrees;                    // en decimas de grado
+    int16_t degrees;                   // en decimas de grado
 }MOTORS_AO_MOVE_PL;
 
 
@@ -136,10 +135,13 @@ typedef enum {
     MOTORS_AO_CENTER_M2_ST,
 
     MOTORS_AO_FREE_M1_ST,
-    MOTORS_AO_FREE_M2_ST,
+    MOTORS_AO_FREE_M2_ST, 
+
+   
 
     MOTORS_AO_MOVE_M1_ST,
     MOTORS_AO_MOVE_M2_ST,
+
 
     MOTORS_AO_WAITING_ST
 }Motors_AO_state;
@@ -154,16 +156,8 @@ typedef struct{
     uint16_t encoder1_zero;
     uint16_t encoder2_zero;
 
-    int32_t encoder1_current_angle;
-    int16_t encoder2_current_angle;
-    int16_t encoder1_turns;
-    int16_t encoder2_turns;
-    uint16_t encoder1_last_read;
-    uint16_t encoder2_last_read;
-
-
-    uint16_t centering_steps;           // Number of steps to do centering
-    uint16_t movement_steps;            // Number of steps to do movement
+    uint16_t centering_steps;
+    uint16_t movement_steps;
     bool movement_dir;
 
     float motor1_current_position;
@@ -174,8 +168,8 @@ typedef struct{
 
 
     /* add private data (local variables) for the AO... */
-    StepperMotor motor1;
-    StepperMotor motor2;
+    //StepperMotor motor1;
+    //StepperMotor motor2;
 
 
 }Motors;

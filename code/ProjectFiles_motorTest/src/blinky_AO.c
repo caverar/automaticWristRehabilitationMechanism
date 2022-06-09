@@ -96,15 +96,15 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
 
     }else if(e->sig == UI_AO_ACK_CALIB_SIG){
 
-        TimeEvent_arm(&this->te, (100 / portTICK_RATE_MS), 0U);
+        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);
         
 
     }else if(e->sig == BLINKY_AO_TIMEOUT_SIG){
-    //     static MOTORS_AO_MOVE_PL move_motor1_event = {MOTORS_AO_MOVE_SIG,
-    //                                                         M1,0};
-    //     Active_post(AO_Motors, (Event*)&move_motor1_event);
+        static MOTORS_AO_MOVE_PL move_motor1_event = {MOTORS_AO_MOVE_SIG,
+                                                            M1,-1200};
+        Active_post(AO_Motors, (Event*)&move_motor1_event);
 
-    // }else if(e->sig == UI_AO_ACK_MOVE_SIG){
+    }else if(e->sig == UI_AO_ACK_MOVE_SIG){
         static const Event free_motors_event = {MOTORS_AO_FREE_M1_SIG};
         Active_post(AO_Motors, (Event*)&free_motors_event);
         TimeEvent_arm(&this->te2, (1000 / portTICK_RATE_MS), 0U);

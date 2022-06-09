@@ -94,6 +94,10 @@ typedef struct{
     int16_t angle;       
 }UI_AO_ANGLE_PL;
 
+typedef struct{
+    Event super;
+    char error_message[20];     
+}UI_AO_ERROR_PL;
     
 
 /* AO Class Data -------------------------------------------------------------*/
