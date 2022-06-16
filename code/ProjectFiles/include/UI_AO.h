@@ -91,7 +91,7 @@ typedef struct{
 
 typedef struct{
     Event super;
-    int16_t angle;       
+    int32_t angle;       
 }UI_AO_ANGLE_PL;
 
 typedef struct{

@@ -41,6 +41,9 @@ void Motors_ctor(Motors * const this){
     // State Machine initialization
     this->state = MOTORS_AO_CALIB_M1_ST;
     this->past_state = MOTORS_AO_CALIB_M1_ST;
+
+    this->center_m1_state = CENTER_M1_PENDING_ST; 
+    this->center_m2_state = CENTER_M2_PENDING_ST; 
     // private data initialization
     
     this->centering_steps = 0;
@@ -99,13 +102,13 @@ static void Motors_dispatch(Motors * const this,
                     if(gpio_get(END_SWITCH_1)){
                         this->past_state = MOTORS_AO_CALIB_M1_ST;
                         this->state = MOTORS_AO_CENTER_M1_ST;
-                        this->centering_steps = MOTOR1_FULL_RANGE_STEPS / 2;
+                        this->centering_steps = MOTOR1_HOME_TO_CENTER_STEPS;
                         TRIGGER_VOID_EVENT;
 
                     }else{
 
                         TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
-                        StepperMotor_move(&(this->motor1), MOTOR1_CCW_DIR,
+                        StepperMotor_move(&(this->motor1), MOTOR1_NEG_DIR,
                                         MOTOR1_CALIB_FREQ, MOTOR1_CALIB_STEPS);
                     }
                     break;
@@ -117,12 +120,24 @@ static void Motors_dispatch(Motors * const this,
         }case MOTORS_AO_CENTER_M1_ST:{      // MOTOR 1 Centering
             switch(e->sig){
                 case MOTORS_AO_TIMEOUT_SIG:{
-                    if(this->centering_steps < MOTOR1_CENTER_STEPS){
-                        if(this->centering_steps != 0){
-                            StepperMotor_move(&(this->motor1), MOTOR1_CW_DIR,
-                                    MOTOR1_CENTER_FREQ, this->centering_steps);
+                    if(this->center_m1_state == CENTER_M1_PENDING_ST){
+                        if(this->centering_steps < MOTOR1_CENTER_STEPS){
+                            if(this->centering_steps != 0){
+                                StepperMotor_move(&(this->motor1), MOTOR1_POS_DIR,
+                                        MOTOR1_CENTER_FREQ, this->centering_steps);
+                            }
+                            this->centering_steps = 0;
+                            this->center_m1_state = CENTER_M1_DONE_ST;
+                            TimeEvent_arm(&this->te, (100 / portTICK_RATE_MS), 0U);
+
+                        }else{
+                            TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
+                            StepperMotor_move(&(this->motor1), MOTOR1_POS_DIR,
+                                        MOTOR1_CENTER_FREQ, MOTOR1_CENTER_STEPS);
+                            this->centering_steps-=MOTOR1_CENTER_STEPS;
                         }
-                        this->centering_steps = 0;
+
+                    }else if(this->center_m1_state == CENTER_M1_DONE_ST){
                         if(this->past_state == MOTORS_AO_CALIB_M1_ST){
                             this->encoder1_zero = read_encoder1();
                             this->encoder1_last_read = this->encoder1_zero;
@@ -131,16 +146,10 @@ static void Motors_dispatch(Motors * const this,
                             this->state = MOTORS_AO_WAITING_ST;
                         }
                         this->past_state = MOTORS_AO_CENTER_M1_ST;
-                        TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
+                        TRIGGER_VOID_EVENT;
 
-                    }else{
-                        TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
-                        StepperMotor_move(&(this->motor1), MOTOR1_CW_DIR,
-                                    MOTOR1_CENTER_FREQ, MOTOR1_CENTER_STEPS);
-                        this->centering_steps-=MOTOR1_CENTER_STEPS;
                     }
                     break;
-                    
                 }default:
                     break;
             }
@@ -168,30 +177,59 @@ static void Motors_dispatch(Motors * const this,
 
                     uint16_t encoder1_current_read = read_encoder1();
 
-                    #if ENCODER1_CW_DIR == 0
+                    #if ENCODER1_POS_DIR == 0
 
                         // Identify overflow
                         if(encoder1_current_read  >= 0 && 
                            encoder1_current_read < 500 && 
                            this->encoder1_last_read <= 4095 &&
-                           this->encoder1_last_read > 3500){
+                           this->encoder1_last_read > 3595){
 
                             this->encoder1_turns++;
                             
                         }else if(encoder1_current_read  <= 4095 && 
-                                encoder1_current_read > 3500 && 
+                                encoder1_current_read > 3595 && 
                                 this->encoder1_last_read >= 0 &&
-                                this->encoder1_last_read > 500){
+                                this->encoder1_last_read < 500){
                             this->encoder1_turns--;
 
                         }
+                        this->encoder1_current_angle = (int32_t)(3600
+                            *(((float)(4095-encoder1_current_read)) 
+                            +((float)(this->encoder1_turns*4096))
+                            -((float)(4095-this->encoder1_zero))))
+                            /(4096*MOTOR1_TRANSMISSION_RATE);
 
 
-                        // this->encoder1_current_angle = (((this->encoder1_turns*4096)
-                        // + encoder1_current_read - this->encoder1_zero)*360)/4096;
-                        this->encoder1_current_angle = encoder1_current_read;
-                    #endif 
+                        this->encoder1_current_angle = 10*MOTOR1_DEG_PER_STEP*
+                            ((float)encoder1_current_read) 
+                            +((float)(this->encoder1_turns*4096))
+                            -((float)this->encoder1_zero);
+                    #elif ENCODER1_POS_DIR == 1
+                        // Identify overflow
+                        if(encoder1_current_read  >= 0 && 
+                           encoder1_current_read < 500 && 
+                           this->encoder1_last_read <= 4095 &&
+                           this->encoder1_last_read > 3595){
 
+                            this->encoder1_turns--;
+                            
+                        }else if(encoder1_current_read  <= 4095 && 
+                                encoder1_current_read > 3595 && 
+                                this->encoder1_last_read >= 0 &&
+                                this->encoder1_last_read < 500){
+                            this->encoder1_turns++;
+
+                        }
+
+                        this->encoder1_current_angle = (int32_t)(3600
+                            *(((float)(4095-encoder1_current_read)) 
+                            +((float)(this->encoder1_turns*4096))
+                            -((float)(4095-this->encoder1_zero))))
+                            /(4096*MOTOR1_TRANSMISSION_RATE);
+                            
+
+                    #endif
 
                     this->encoder1_last_read = encoder1_current_read;
                     TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
@@ -204,7 +242,14 @@ static void Motors_dispatch(Motors * const this,
                     break;
                 }case MOTORS_AO_BLOCK_M1_SIG:{
                     StepperMotor_enable(&(this->motor1));
-                    // TODO jump to centering
+                    this->past_state = MOTORS_AO_FREE_M1_ST;
+                    this->state = MOTORS_AO_CENTER_M1_ST;
+                    // TODO DIR centering
+                    this->centering_steps = this->encoder1_last_read / (10* MOTOR1_DEG_PER_STEP);
+                    
+                    TRIGGER_VOID_EVENT;
+
+
                 }
                 default:
                     break;
@@ -225,14 +270,14 @@ static void Motors_dispatch(Motors * const this,
 
 
                         float steps_to_move = (this->motor1_goal_position -
-                            this->motor1_current_position)/MOTOR1_DEGREES_PER_STEPS;
+                            this->motor1_current_position)/MOTOR1_DEG_PER_STEP;
 
                         if(steps_to_move<0){
                             this->movement_steps = (uint16_t)(-1*steps_to_move);
-                            this->movement_dir = MOTOR1_CCW_DIR;
+                            this->movement_dir = MOTOR1_NEG_DIR;
                         }else{
                             this->movement_steps = (uint16_t)(steps_to_move);
-                            this->movement_dir = MOTOR1_CW_DIR;
+                            this->movement_dir = MOTOR1_POS_DIR;
                         }
                         
 
@@ -243,7 +288,7 @@ static void Motors_dispatch(Motors * const this,
                                 ((float)(((MOTORS_AO_MOVE_PL*)e)->degrees)/10);
 
                         float steps_to_move = (this->motor2_goal_position -
-                            this->motor2_current_position)/MOTOR2_DEGREES_PER_STEPS;
+                            this->motor2_current_position)/MOTOR2_DEG_PER_STEP;
 
                         if(steps_to_move<0){
                             this->movement_steps = (uint16_t)(-1*steps_to_move);
