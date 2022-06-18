@@ -90,8 +90,8 @@ char error_message2[20];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {0, 2, -450, 450, 5};
-Exercise default_exercise_2 = {1, 1, -300, 300, 3};
+Exercise default_exercise_1 = {1, 5, -300, 300, 5};
+Exercise default_exercise_2 = {1, 2, -100, 100, 3};
 Exercise default_exercise_3 = {2, 3, -200, 200, 2};
 
 //Selected routine. 0: default routine, 1: created routine
@@ -134,8 +134,8 @@ void UI_ctor(UI * const this){
 
     // default values
     this->default_reps = 1;
-    this->default_min_angle = -20;
-    this->default_max_angle = 20;
+    this->default_min_angle = -200;
+    this->default_max_angle = 200;
     this->default_time_in_position = 3;
     this->default_pause_between_exercises = 5;
 
@@ -518,7 +518,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         sprintf(char_data,"%ld", new_angle/10);
                         change_string(modified_buffer, 0, char_data);
                         display_row4(modified_buffer);
-                        vTaskDelay(1000 / portTICK_PERIOD_MS);
+                        vTaskDelay(50 / portTICK_PERIOD_MS);
                         static Event rq_motor1_event2 = {MOTORS_AO_RQ_DEG_M1_SIG};
                         Active_post(AO_Motors, (Event*)&rq_motor1_event2);   
                                             
@@ -531,7 +531,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         sprintf(char_data,"%ld", new_angle/10);
                         change_string(modified_buffer, 0, char_data);
                         display_row4(modified_buffer);
-                        vTaskDelay(1000 / portTICK_PERIOD_MS);
+                        vTaskDelay(50 / portTICK_PERIOD_MS);
                         static Event rq_motor2_event2 = {MOTORS_AO_RQ_DEG_M2_SIG};
                         Active_post(AO_Motors, (Event*)&rq_motor2_event2);                          
                     break;
@@ -934,9 +934,9 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         change_string(SHOW_AN_EXERCISE.options[0], 7, availableExercises[routine_to_do.ejercicios[selected_exercise].type_of_exercise]);
                         sprintf(char_data,"%ld", routine_to_do.ejercicios[selected_exercise].num_of_reps);
                         change_string(SHOW_AN_EXERCISE.options[1], 14, char_data);
-                        sprintf(char_data,"%ld", routine_to_do.ejercicios[selected_exercise].lim_min);
+                        sprintf(char_data,"%ld", routine_to_do.ejercicios[selected_exercise].lim_min/10);
                         change_string(SHOW_AN_EXERCISE.options[2], 13, char_data);
-                        sprintf(char_data,"%ld", routine_to_do.ejercicios[selected_exercise].lim_max);
+                        sprintf(char_data,"%ld", routine_to_do.ejercicios[selected_exercise].lim_max/10);
                         change_string(SHOW_AN_EXERCISE.options[3], 13, char_data);
                         sprintf(char_data,"%ld", routine_to_do.ejercicios[selected_exercise].time_pos);
                         change_string(SHOW_AN_EXERCISE.options[4], 7, char_data);

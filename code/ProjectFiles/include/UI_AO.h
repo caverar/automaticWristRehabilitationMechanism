@@ -141,8 +141,8 @@ typedef struct {
 
         // default values
     int8_t default_reps;
-    int8_t default_min_angle;
-    int8_t default_max_angle;
+    int16_t default_min_angle;
+    int16_t default_max_angle;
     int8_t default_time_in_position;
     int8_t default_pause_between_exercises;
 

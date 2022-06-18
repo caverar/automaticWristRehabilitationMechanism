@@ -107,30 +107,30 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
     //     Active_post(AO_Motors, (Event*)&move_motor1_event);
 
     // }else if(e->sig == UI_AO_ACK_MOVE_SIG){
-        static const Event free_motors_event = {MOTORS_AO_FREE_M2_SIG};
+        static const Event free_motors_event = {MOTORS_AO_FREE_M1_SIG};
         Active_post(AO_Motors, (Event*)&free_motors_event);
         TimeEvent_arm(&this->te2, (1000 / portTICK_RATE_MS), 0U);
 
     }else if(e->sig == BLINKY_AO_TIMEOUT2_SIG){
-        if(count<30){
-            static const Event get_angle_event = {MOTORS_AO_RQ_DEG_M2_SIG};
+        if(count<2){
+            static const Event get_angle_event = {MOTORS_AO_RQ_DEG_M1_SIG};
             Active_post(AO_Motors, (Event*)&get_angle_event);
             TimeEvent_arm(&this->te2, (100 / portTICK_RATE_MS), 0U);
             count++;
         }else{
-            static const Event block_m2 = {MOTORS_AO_BLOCK_M2_SIG};
+            static const Event block_m2 = {MOTORS_AO_BLOCK_M1_SIG};
             Active_post(AO_Motors, (Event*)&block_m2);
             TimeEvent_arm(&this->te2, (100 / portTICK_RATE_MS), 0U);
         }
 
 
-    }else if(e->sig == UI_AO_ACK_DEG_M2_SIG){
+    }else if(e->sig == UI_AO_ACK_DEG_M1_SIG){
         printf("Angulo AO: %d\n",((UI_AO_ANGLE_PL*)e)->angle);
         count++;
         TimeEvent_arm(&this->te3, (2000 / portTICK_RATE_MS), 0U);
 
     }else if(e->sig == BLINKY_AO_TIMEOUT3_SIG){
-        static MOTORS_AO_MOVE_PL movement_event = {MOTORS_AO_MOVE_SIG,M2,300};
+        static MOTORS_AO_MOVE_PL movement_event = {MOTORS_AO_MOVE_SIG,M1,1800};
         Active_post(AO_Motors, (Event*)&movement_event);
 
     }   

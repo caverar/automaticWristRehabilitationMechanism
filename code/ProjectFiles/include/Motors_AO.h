@@ -60,37 +60,51 @@ extern Active *AO_blinkyButton;
 #define MOTOR1_CALIB_FREQ 250
 #define MOTOR1_CALIB_STEPS 1
 
-#define MOTOR2_CALIB_FREQ 750
+#define MOTOR2_CALIB_FREQ 250
 #define MOTOR2_CALIB_STEPS 1
 
-#define MOTOR1_CENTER_FREQ 250
-#define MOTOR1_CENTER_STEPS 10
+#define MOTOR1_CENTER_FREQ 50
+#define MOTOR1_CENTER_STEPS 2
 
-#define MOTOR2_CENTER_FREQ 750
-#define MOTOR2_CENTER_STEPS 30
+#define MOTOR2_CENTER_FREQ 50
+#define MOTOR2_CENTER_STEPS 2
 
-#define MOTOR1_MOVEMENT_FREQ 250
-#define MOTOR1_MOVEMENT_STEPS 10
+#define MOTOR1_MOVEMENT_FREQ 50
+#define MOTOR1_MOVEMENT_STEPS 2
 
-#define MOTOR2_MOVEMENT_FREQ 750
-#define MOTOR2_MOVEMENT_STEPS 30
-
-
-
-#define MOTOR1_DEGREES_PER_STEPS 0.3
-#define MOTOR1_FULL_RANGE_STEPS 600     // NUmber of steps in valid range
-
-#define MOTOR2_DEGREES_PER_STEPS 0.9
-#define MOTOR2_FULL_RANGE_STEPS 200     // Number of steps in valid range
+#define MOTOR2_MOVEMENT_FREQ 50
+#define MOTOR2_MOVEMENT_STEPS 2
 
 
-#define MOTOR1_CW_DIR  0    //(+)
-#define MOTOR1_CCW_DIR 1    //(-)
-#define ENCODER1_CW_DIR 0
+#define MOTOR2_DEG_RANGE [-90, 90]
+#define MOTOR2_DEG_RANGE_LEN 180
+#define MOTOR2_TRANSMISSION_RATE 1
+#define MOTOR2_STEPS_PER_REV 400
+#define MOTOR2_FULL_RANGE_STEPS 200     // NUmber of steps in valid range
+#define MOTOR2_HOME_TO_CENTER_STEPS 100
+#define MOTOR2_DEG_PER_STEP (float)(360/(MOTOR2_TRANSMISSION_RATE*MOTOR2_STEPS_PER_REV))
+#define MOTOR2_STEPS_PER_DEG (float)((MOTOR2_TRANSMISSION_RATE*MOTOR2_STEPS_PER_REV)/360)
 
-#define MOTOR2_CW_DIR  0    //(+)
-#define MOTOR2_CCW_DIR 1    //(-)
-#define ENCODER2_CW_DIR 1
+
+#define MOTOR1_DEG_RANGE [-90, 110]     // End sensor at 110°
+#define MOTOR1_DEG_RANGE_LEN 200
+#define MOTOR1_TRANSMISSION_RATE 3
+#define MOTOR1_STEPS_PER_REV 400
+#define MOTOR1_FULL_RANGE_STEPS 600     // TODO Number of steps in valid range
+#define MOTOR1_HOME_TO_CENTER_STEPS 300
+#define MOTOR1_DEG_PER_STEP (float)(360/(MOTOR1_TRANSMISSION_RATE*MOTOR1_STEPS_PER_REV))
+#define MOTOR1_STEPS_PER_DEG (float)((MOTOR1_TRANSMISSION_RATE*MOTOR1_STEPS_PER_REV)/360)
+
+
+#define MOTOR1_POS_DIR  1    //(+)      // CCW positive right hand rule
+#define MOTOR1_NEG_DIR  0    //(-)
+#define ENCODER1_POS_DIR 1
+
+#define MOTOR2_POS_DIR  1   //(+)       // CCW positive right hand rule
+#define MOTOR2_NEG_DIR  0   //(-)
+#define ENCODER2_POS_DIR 1
+
+// Both encoders get negative numbers
 
 
 
@@ -124,7 +138,7 @@ enum Motors_Signals{
 typedef struct{
     Event super;                        // Inherit from Event base class
     enum{M1, M2}motor;
-    int16_t degrees;                    // en decimas de grado
+    int16_t degrees;                    // en decimas de grado 
 }MOTORS_AO_MOVE_PL;
 
 
@@ -144,6 +158,15 @@ typedef enum {
     MOTORS_AO_WAITING_ST
 }Motors_AO_state;
 
+typedef enum {
+    CENTER_M1_PENDING_ST,
+    CENTER_M1_DONE_ST
+}Motors_AO_Center_M1_ST_state;
+
+typedef enum {
+    CENTER_M2_PENDING_ST,
+    CENTER_M2_DONE_ST
+}Motors_AO_Center_M2_ST_state;
 
 /* AO Class Data -------------------------------------------------------------*/
 typedef struct{
@@ -151,10 +174,15 @@ typedef struct{
     TimeEvent te;                       // Add TimeEvent to the AO
     Motors_AO_state state;
     Motors_AO_state past_state;
+
+    // Sub SM
+    Motors_AO_Center_M1_ST_state center_m1_state; 
+    Motors_AO_Center_M2_ST_state center_m2_state; 
+
     uint16_t encoder1_zero;
     uint16_t encoder2_zero;
 
-    int32_t encoder1_current_angle;
+    int16_t encoder1_current_angle;
     int16_t encoder2_current_angle;
     int16_t encoder1_turns;
     int16_t encoder2_turns;
@@ -163,6 +191,7 @@ typedef struct{
 
 
     uint16_t centering_steps;           // Number of steps to do centering
+    bool centering_dir;
     uint16_t movement_steps;            // Number of steps to do movement
     bool movement_dir;
 

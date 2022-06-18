@@ -296,14 +296,14 @@ static void Motors_dispatch(Motors * const this,
                     
                     
                     if(this->encoder1_current_angle<0){
-                        this->centering_dir = MOTOR1_NEG_DIR;
+                        this->centering_dir = MOTOR1_POS_DIR;
 
                         this->centering_steps = (uint16_t) 
                                                 ((-this->encoder1_current_angle
                                                 *MOTOR1_TRANSMISSION_RATE
                                                 *MOTOR1_STEPS_PER_REV)/3600);
                     }else{
-                        this->centering_dir = MOTOR1_POS_DIR;
+                        this->centering_dir = MOTOR1_NEG_DIR;
 
                         this->centering_steps = (uint16_t) 
                                                 ((this->encoder1_current_angle
@@ -401,14 +401,14 @@ static void Motors_dispatch(Motors * const this,
                     // TODO: Remove fix angle
                     this->encoder2_current_angle = 900;
                     if(this->encoder2_current_angle<0){
-                        this->centering_dir = MOTOR2_NEG_DIR;
+                        this->centering_dir = MOTOR2_POS_DIR;
 
                         this->centering_steps = (uint16_t) 
                                                 ((-this->encoder2_current_angle
                                                 *MOTOR2_TRANSMISSION_RATE
                                                 *MOTOR2_STEPS_PER_REV)/3600);
                     }else{
-                        this->centering_dir = MOTOR2_POS_DIR;
+                        this->centering_dir = MOTOR2_NEG_DIR;
 
                         this->centering_steps = (uint16_t) 
                                                 ((this->encoder2_current_angle
