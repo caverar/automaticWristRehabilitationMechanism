@@ -83,6 +83,7 @@ extern Active *AO_blinkyButton;
 #define MOTOR1_FULL_RANGE_STEPS 200     // NUmber of steps in valid range
 #define MOTOR1_HOME_TO_CENTER_STEPS 100
 #define MOTOR1_DEG_PER_STEP (float)(360/(MOTOR1_TRANSMISSION_RATE*MOTOR1_STEPS_PER_REV))
+#define MOTOR1_STEPS_PER_DEG (float)((MOTOR1_TRANSMISSION_RATE*MOTOR1_STEPS_PER_REV)/360)
 
 
 #define MOTOR2_DEG_RANGE [-90, 110]     // End sensor at 110°
@@ -92,14 +93,15 @@ extern Active *AO_blinkyButton;
 #define MOTOR2_FULL_RANGE_STEPS 600     // TODO Number of steps in valid range
 #define MOTOR2_HOME_TO_CENTER_STEPS 300
 #define MOTOR2_DEG_PER_STEP (float)(360/(MOTOR2_TRANSMISSION_RATE*MOTOR2_STEPS_PER_REV))
+#define MOTOR2_STEPS_PER_DEG (float)((MOTOR2_TRANSMISSION_RATE*MOTOR2_STEPS_PER_REV)/360)
 
 
 #define MOTOR1_POS_DIR  1    //(+)      // CCW positive right hand rule
 #define MOTOR1_NEG_DIR  0    //(-)
 #define ENCODER1_POS_DIR 1
 
-#define MOTOR2_CW_DIR  1    //(+)       // CCW positive right hand rule
-#define MOTOR2_CCW_DIR 0    //(-)
+#define MOTOR2_POS_DIR  1   //(+)       // CCW positive right hand rule
+#define MOTOR2_NEG_DIR  0   //(-)
 #define ENCODER2_POS_DIR 1
 
 // Both encoders get negative numbers
@@ -180,7 +182,7 @@ typedef struct{
     uint16_t encoder1_zero;
     uint16_t encoder2_zero;
 
-    int32_t encoder1_current_angle;
+    int16_t encoder1_current_angle;
     int16_t encoder2_current_angle;
     int16_t encoder1_turns;
     int16_t encoder2_turns;
@@ -189,6 +191,7 @@ typedef struct{
 
 
     uint16_t centering_steps;           // Number of steps to do centering
+    bool centering_dir;
     uint16_t movement_steps;            // Number of steps to do movement
     bool movement_dir;
 

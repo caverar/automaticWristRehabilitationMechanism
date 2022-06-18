@@ -47,6 +47,7 @@ extern Active *AO_blinkyButton;
 enum blinky_Signals {
     BLINKY_AO_TIMEOUT_SIG = USER_SIG,    // First Signals must replace USER_SIG
     BLINKY_AO_TIMEOUT2_SIG,
+    BLINKY_AO_TIMEOUT3_SIG,
     // User Signals
     BLINKY_AO_SW1_PRESSED_SIG,
     BLINKY_AO_SW2_PRESSED_SIG,
@@ -70,6 +71,7 @@ typedef struct {
 
     TimeEvent te;               // Add TimeEvent to the AO
     TimeEvent te2;
+    TimeEvent te3;
 
     /* add private data (local variables) for the AO... */
     enum{

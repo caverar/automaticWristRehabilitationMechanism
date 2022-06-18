@@ -58,7 +58,7 @@ void BlinkyButton_ctor(BlinkyButton * const this){
     // Time events construction
     TimeEvent_ctor(&this->te, BLINKY_AO_TIMEOUT_SIG, &this->super);
     TimeEvent_ctor(&this->te2, BLINKY_AO_TIMEOUT2_SIG, &this->super);
-    
+    TimeEvent_ctor(&this->te3, BLINKY_AO_TIMEOUT3_SIG, &this->super);
     // State Machine initialization
     this->state = BLINKY_AO_START_ST;
 
@@ -107,24 +107,33 @@ static void BlinkyButton_dispatch(BlinkyButton * const this,
     //     Active_post(AO_Motors, (Event*)&move_motor1_event);
 
     // }else if(e->sig == UI_AO_ACK_MOVE_SIG){
-        static const Event free_motors_event = {MOTORS_AO_FREE_M1_SIG};
+        static const Event free_motors_event = {MOTORS_AO_FREE_M2_SIG};
         Active_post(AO_Motors, (Event*)&free_motors_event);
         TimeEvent_arm(&this->te2, (1000 / portTICK_RATE_MS), 0U);
 
     }else if(e->sig == BLINKY_AO_TIMEOUT2_SIG){
-        static const Event get_angle_event = {MOTORS_AO_RQ_DEG_M1_SIG};
-        Active_post(AO_Motors, (Event*)&get_angle_event);
-        TimeEvent_arm(&this->te2, (100 / portTICK_RATE_MS), 0U);
+        if(count<30){
+            static const Event get_angle_event = {MOTORS_AO_RQ_DEG_M2_SIG};
+            Active_post(AO_Motors, (Event*)&get_angle_event);
+            TimeEvent_arm(&this->te2, (100 / portTICK_RATE_MS), 0U);
+            count++;
+        }else{
+            static const Event block_m2 = {MOTORS_AO_BLOCK_M2_SIG};
+            Active_post(AO_Motors, (Event*)&block_m2);
+            TimeEvent_arm(&this->te2, (100 / portTICK_RATE_MS), 0U);
+        }
 
-    }else if(e->sig == UI_AO_ACK_DEG_M1_SIG){
+
+    }else if(e->sig == UI_AO_ACK_DEG_M2_SIG){
         printf("Angulo AO: %d\n",((UI_AO_ANGLE_PL*)e)->angle);
         count++;
-        if(count>10000){
-        static const Event jump_to_centering = {MOTORS_AO_BLOCK_M1_SIG};
-        Active_post(AO_Motors, (Event*)&jump_to_centering);
-            
-        }
-    }
+        TimeEvent_arm(&this->te3, (2000 / portTICK_RATE_MS), 0U);
+
+    }else if(e->sig == BLINKY_AO_TIMEOUT3_SIG){
+        static MOTORS_AO_MOVE_PL movement_event = {MOTORS_AO_MOVE_SIG,M2,300};
+        Active_post(AO_Motors, (Event*)&movement_event);
+
+    }   
 
 }
 
