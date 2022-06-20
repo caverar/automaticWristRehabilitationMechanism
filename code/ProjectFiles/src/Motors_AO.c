@@ -101,7 +101,7 @@ static void Motors_dispatch(Motors * const this,
                     // Jump to next event response
                 case MOTORS_AO_TIMEOUT_SIG:{
                     // Look for the end switch press
-                    if(gpio_get(END_SWITCH_1)){
+                    if(!gpio_get(END_SWITCH_1)){
                         this->past_state = MOTORS_AO_CALIB_M1_ST;
                         this->state = MOTORS_AO_CENTER_M1_ST;
                         this->centering_steps = MOTOR1_HOME_TO_CENTER_STEPS;
@@ -163,7 +163,7 @@ static void Motors_dispatch(Motors * const this,
                     // Jump to next event response
                 case MOTORS_AO_TIMEOUT_SIG:{
                     // Look for the end switch press
-                    if(gpio_get(END_SWITCH_2)){
+                    if(!gpio_get(END_SWITCH_2)){
                         this->past_state = MOTORS_AO_CALIB_M2_ST;
                         this->state = MOTORS_AO_CENTER_M2_ST;
                         this->centering_steps = MOTOR2_HOME_TO_CENTER_STEPS;

@@ -90,9 +90,9 @@ char error_message2[20];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {1, 5, -300, 300, 5};
-Exercise default_exercise_2 = {1, 2, -100, 100, 3};
-Exercise default_exercise_3 = {2, 3, -200, 200, 2};
+Exercise default_exercise_1 = {0, 3, -400, 400, 3};
+Exercise default_exercise_2 = {1, 3, -400, 400, 3};
+Exercise default_exercise_3 = {2, 3, -400, 400, 3};
 
 //Selected routine. 0: default routine, 1: created routine
 uint selected_routine = 0;

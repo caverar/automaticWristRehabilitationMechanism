@@ -1,7 +1,6 @@
 {
     "version": "0.2.0",
     "configurations": [
-    
         {
             "name": "Pico Debug",
             "cwd": "${workspaceRoot}",
@@ -23,7 +22,6 @@
                 "break main",
                 "continue"
             ]
-            
         }
     ]
 }
