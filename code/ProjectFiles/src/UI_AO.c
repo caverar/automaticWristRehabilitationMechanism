@@ -985,7 +985,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         if(counter == 0){
                             change_string(modified_buffer, 0, "GO!");
                             display_row4(modified_buffer);
-                            this->state = UI_AO_CENTER_DEVICE_ST;
+                            this->state = UI_AO_MOVE_BAR_ST;
                             TimeEvent_arm(&this->te, (1500 / portTICK_RATE_MS), 0U);
                         }
                         else{
@@ -1013,7 +1013,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     }
                     case UI_AO_ACK_MOVE_SIG:{
                         printf("ACK move center from motors received\n");
-                        this->state = UI_AO_MOVE_BAR_ST;
+                        this->state = UI_AO_END_OF_EXERCISE_ST;
                         TRIGGER_VOID_EVENT; 
                     break;
                     }                     
@@ -1174,12 +1174,15 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             selected_exercise ++;
                             current_repetition = 0;
                             counter = routine_to_do.pause;
-                            this->state = UI_AO_END_OF_EXERCISE_ST;
+                            this->state = UI_AO_CENTER_DEVICE_ST;
                             TRIGGER_VOID_EVENT;
                             
                         }
                         else{
                             display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "    See you soon    ");
+                            this->state = UI_AO_INICIO_ST;
+                            TimeEvent_arm(&this->te, (1000/ portTICK_RATE_MS), 0U);
+
                         }
                     break;
                     }
@@ -1201,7 +1204,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             TimeEvent_arm(&this->te, (1000/ portTICK_RATE_MS), 0U);
                         }
                         else{
-                            this->state = UI_AO_CENTER_DEVICE_ST;                                
+                            this->state = UI_AO_MOVE_BAR_ST;                                
                             TRIGGER_VOID_EVENT;
                         }
                     break;
