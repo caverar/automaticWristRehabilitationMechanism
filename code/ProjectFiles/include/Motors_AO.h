@@ -6,7 +6,7 @@
   * @file    Motors_AO.h
   * @author  Camilo Vera
   * @brief   Motors active object
-  *          This file constainst an implantation of stepper motors control
+  *          This file constains an implantation of stepper motors control
   *          using FreeAct over FreeRTOS 
   ****************************************************************************** 
 */
@@ -100,8 +100,8 @@ extern Active *AO_blinkyButton;
 #define MOTOR1_NEG_DIR  0    //(-)
 #define ENCODER1_POS_DIR 1
 
-#define MOTOR2_POS_DIR  1   //(+)       // CCW positive right hand rule
-#define MOTOR2_NEG_DIR  0   //(-)
+#define MOTOR2_POS_DIR  0   //(+)       // CCW positive right hand rule
+#define MOTOR2_NEG_DIR  1   //(-)
 #define ENCODER2_POS_DIR 1
 
 // Both encoders get negative numbers

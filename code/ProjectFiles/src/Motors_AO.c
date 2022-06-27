@@ -157,7 +157,7 @@ static void Motors_dispatch(Motors * const this,
                     break;
             }
             break;
-        }case MOTORS_AO_CALIB_M2_ST:{       // PENDING
+        }case MOTORS_AO_CALIB_M2_ST:{
             switch(e->sig){
                 case MOTORS_AO_START_CALIB_SIG:
                     // Jump to next event response
@@ -167,13 +167,13 @@ static void Motors_dispatch(Motors * const this,
                         this->past_state = MOTORS_AO_CALIB_M2_ST;
                         this->state = MOTORS_AO_CENTER_M2_ST;
                         this->centering_steps = MOTOR2_HOME_TO_CENTER_STEPS;
-                        this->centering_dir = MOTOR2_NEG_DIR;
+                        this->centering_dir = MOTOR2_POS_DIR;
                         TRIGGER_VOID_EVENT;
 
                     }else{
 
                         TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
-                        StepperMotor_move(&(this->motor2), MOTOR2_POS_DIR,
+                        StepperMotor_move(&(this->motor2), MOTOR2_NEG_DIR,
                                         MOTOR2_CALIB_FREQ, MOTOR2_CALIB_STEPS);
                     }
                     break;
@@ -182,7 +182,7 @@ static void Motors_dispatch(Motors * const this,
             }
             break;
  
-        }case MOTORS_AO_CENTER_M2_ST:{      //PENDING
+        }case MOTORS_AO_CENTER_M2_ST:{
             switch(e->sig){
                 case MOTORS_AO_TIMEOUT_SIG:{
                     if(this->center_m2_state == CENTER_M2_PENDING_ST){
@@ -328,24 +328,22 @@ static void Motors_dispatch(Motors * const this,
                     StepperMotor_disable(&(this->motor2));
 
                     uint16_t encoder2_current_read = read_encoder2();
-
+                        // Identify overflow
+                    if(encoder2_current_read  >= 0 && 
+                       encoder2_current_read < 500 && 
+                       this->encoder2_last_read <= 4095 &&
+                       this->encoder2_last_read > 3595){
+                        this->encoder2_turns--;
+                        
+                    }else if(encoder2_current_read  <= 4095 && 
+                            encoder2_current_read > 3595 && 
+                            this->encoder2_last_read >= 0 &&
+                            this->encoder2_last_read < 500){
+                        this->encoder2_turns++;
+                    }
                     #if ENCODER2_POS_DIR == 0
 
-                        // Identify overflow
-                        if(encoder2_current_read  >= 0 && 
-                           encoder2_current_read < 500 && 
-                           this->encoder2_last_read <= 4095 &&
-                           this->encoder2_last_read > 3595){
 
-                            this->encoder2_turns++;
-                            
-                        }else if(encoder2_current_read  <= 4095 && 
-                                encoder2_current_read > 3595 && 
-                                this->encoder2_last_read >= 0 &&
-                                this->encoder2_last_read < 500){
-                            this->encoder2_turns--;
-
-                        }
                         this->encoder2_current_angle = (int32_t)(3600
                             *(((float)(4095-encoder2_current_read)) 
                             +((float)(this->encoder2_turns*4096))
@@ -353,26 +351,9 @@ static void Motors_dispatch(Motors * const this,
                             /(4096*MOTOR2_TRANSMISSION_RATE);
 
 
-                        this->encoder2_current_angle = 10*MOTOR2_DEG_PER_STEP*
-                            ((float)encoder2_current_read) 
-                            +((float)(this->encoder2_turns*4096))
-                            -((float)this->encoder2_zero);
+
                     #elif ENCODER2_POS_DIR == 1
-                        // Identify overflow
-                        if(encoder2_current_read  >= 0 && 
-                           encoder2_current_read < 500 && 
-                           this->encoder2_last_read <= 4095 &&
-                           this->encoder2_last_read > 3595){
 
-                            this->encoder2_turns--;
-                            
-                        }else if(encoder2_current_read  <= 4095 && 
-                                encoder2_current_read > 3595 && 
-                                this->encoder2_last_read >= 0 &&
-                                this->encoder2_last_read < 500){
-                            this->encoder2_turns++;
-
-                        }
 
                         this->encoder2_current_angle = -((int32_t)(3600
                             *(((float)(4095-encoder2_current_read)) 
@@ -399,8 +380,7 @@ static void Motors_dispatch(Motors * const this,
                     this->state = MOTORS_AO_CENTER_M2_ST;
                     this->center_m2_state = CENTER_M2_PENDING_ST;
 
-                    // TODO: Remove fix angle
-                    this->encoder2_current_angle = 900;
+
                     if(this->encoder2_current_angle<0){
                         this->centering_dir = MOTOR2_POS_DIR;
 
