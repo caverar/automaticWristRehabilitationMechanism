@@ -345,7 +345,7 @@ static void Motors_dispatch(Motors * const this,
 
 
                         this->encoder2_current_angle = (int32_t)(3600
-                            *(((float)(4095-encoder2_current_read)) 
+                            *(((float)(encoder2_current_read)) 
                             +((float)(this->encoder2_turns*4096))
                             -((float)(4095-this->encoder2_zero))))
                             /(4096*MOTOR2_TRANSMISSION_RATE);

@@ -102,7 +102,7 @@ extern Active *AO_blinkyButton;
 
 #define MOTOR2_POS_DIR  0   //(+)       // CCW positive right hand rule
 #define MOTOR2_NEG_DIR  1   //(-)
-#define ENCODER2_POS_DIR 1
+#define ENCODER2_POS_DIR 0
 
 // Both encoders get negative numbers
 
@@ -182,8 +182,8 @@ typedef struct{
     uint16_t encoder1_zero;
     uint16_t encoder2_zero;
 
-    int16_t encoder1_current_angle;
-    int16_t encoder2_current_angle;
+    int32_t encoder1_current_angle;
+    int32_t encoder2_current_angle;
     int16_t encoder1_turns;
     int16_t encoder2_turns;
     uint16_t encoder1_last_read;

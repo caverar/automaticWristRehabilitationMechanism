@@ -90,9 +90,13 @@ char error_message2[20];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {1, 3, -400, 400, 3};
-Exercise default_exercise_2 = {1, 3, -400, 400, 3};
-Exercise default_exercise_3 = {2, 3, -400, 400, 3};
+Exercise default_exercise_1 = {1, 2, -400, 200, 2};
+Exercise default_exercise_2 = {0, 2, -830, 600, 2};
+// Exercise default_exercise_3 = {2, 2, -300, 400, 2};
+// Exercise default_exercise_4 = {1, 2, -400, 200, 2};
+// Exercise default_exercise_5 = {0, 2, -800, 600, 2};
+// Exercise default_exercise_6 = {2, 2, -300, 400, 2};
+// Exercise default_exercise_7 = {0, 2, -300, 400, 2};
 
 //Selected routine. 0: default routine, 1: created routine
 int8_t selected_routine = 0;
@@ -160,12 +164,15 @@ void UI_ctor(UI * const this){
     created_routine.pause = this->pause_between_exercises;
 
     //initial parameters for default routine
-    default_routine.num_ejercicios = 3;
+    default_routine.num_ejercicios = 2;
     default_routine.pause = this->pause_between_exercises;
     default_routine.ejercicios[0] = default_exercise_1;
     default_routine.ejercicios[1] = default_exercise_2;
-    default_routine.ejercicios[2] = default_exercise_3;
-    
+    // default_routine.ejercicios[2] = default_exercise_3;
+    // default_routine.ejercicios[3] = default_exercise_4;
+    // default_routine.ejercicios[4] = default_exercise_5;
+    // default_routine.ejercicios[5] = default_exercise_6;
+    // default_routine.ejercicios[6] = default_exercise_7;   
         
 }
 
@@ -1042,9 +1049,10 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         inicio = true;
                     break;  
                     }
-                    case UI_AO_ACK_MOVE_SIG:{
+                    case UI_AO_ACK_MOVE_SIG:{                                              
                         this->state = UI_AO_MOVE_TO_MIN_ANGLE_ST;
-                        TRIGGER_VOID_EVENT; 
+                        TimeEvent_arm(&this->te, (2000 / portTICK_RATE_MS), 0U);
+                        
                     break;
                     } 
                     default:
@@ -1182,10 +1190,9 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             TRIGGER_VOID_EVENT;                            
                         }
                         else{
-                            display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "    See you soon    ");
-                            this->state = UI_AO_INICIO_ST;
+                            
+                            this->state = UI_AO_END1_ST;
                             TimeEvent_arm(&this->te, (1000/ portTICK_RATE_MS), 0U);
-
                         }
                     break;
                     }
@@ -1214,6 +1221,53 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     }
 
 
+                    default:
+                        break;
+                }
+            break;
+            }
+            case UI_AO_END1_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{                        
+                        static MOTORS_AO_MOVE_PL center_movement_event_end = {MOTORS_AO_MOVE_SIG, M1, 0};
+                        Active_post(AO_Motors, (Event*)&center_movement_event_end);                     
+                        
+                    break;
+                    }
+                    case UI_AO_ACK_MOVE_SIG:{
+                        printf("ACK move center from motors received\n");
+                        this->state = UI_AO_END2_ST;
+                        TRIGGER_VOID_EVENT; 
+                    break;
+                    }                     
+                    default:
+                        break;
+                }
+            break;
+            }
+            case UI_AO_END2_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{
+                        if(routine_to_do.ejercicios[selected_exercise-1].type_of_exercise == 2){
+                            static MOTORS_AO_MOVE_PL horizontal_movement_event_end = {MOTORS_AO_MOVE_SIG, M2, -900};
+                            Active_post(AO_Motors, (Event*)&horizontal_movement_event_end);
+                            
+                        }
+                        else{
+                            static MOTORS_AO_MOVE_PL vertical_movement_event_end = {MOTORS_AO_MOVE_SIG, M2, 0};
+                            Active_post(AO_Motors, (Event*)&vertical_movement_event_end);
+                            
+                        }
+                        inicio = true;
+                    break;  
+                    }
+                    case UI_AO_ACK_MOVE_SIG:{                                              
+                        display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "                    ");
+                        this->state = UI_AO_INICIO_ST;
+                        TimeEvent_arm(&this->te, (2000/ portTICK_RATE_MS), 0U);
+
+                    break;
+                    }                     
                     default:
                         break;
                 }

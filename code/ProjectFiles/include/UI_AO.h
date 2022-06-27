@@ -137,6 +137,8 @@ typedef struct {
         UI_AO_END_OF_EXERCISE_ST,
         UI_AO_FINISH_ST,
         UI_AO_ERROR_ST,
+        UI_AO_END1_ST,
+        UI_AO_END2_ST
     }state;
 
         // default values
