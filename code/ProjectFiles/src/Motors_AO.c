@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 // SDK Libraries
 #include "pico/stdlib.h"
@@ -208,8 +209,11 @@ static void Motors_dispatch(Motors * const this,
                             this->encoder2_last_read = this->encoder2_zero;
                             static const Event calibration_ack = {UI_AO_ACK_CALIB_SIG};
                             Active_post(AO_UI, (Event*)&calibration_ack);
+                            this->state = MOTORS_AO_WAITING_ST;
+                        }else{
+                            this->state = MOTORS_AO_CENTER_M2_FREE_FIX_ST;
                         }
-                        this->state = MOTORS_AO_WAITING_ST;
+
                         this->past_state = MOTORS_AO_CENTER_M2_ST;
                         TRIGGER_VOID_EVENT;
 
@@ -333,22 +337,23 @@ static void Motors_dispatch(Motors * const this,
                        encoder2_current_read < 500 && 
                        this->encoder2_last_read <= 4095 &&
                        this->encoder2_last_read > 3595){
-                        this->encoder2_turns--;
+                        this->encoder2_turns++;
                         
                     }else if(encoder2_current_read  <= 4095 && 
                             encoder2_current_read > 3595 && 
                             this->encoder2_last_read >= 0 &&
                             this->encoder2_last_read < 500){
-                        this->encoder2_turns++;
+                        this->encoder2_turns--;
                     }
                     #if ENCODER2_POS_DIR == 0
 
-
-                        this->encoder2_current_angle = (int32_t)(3600
-                            *(((float)(4095-encoder2_current_read)) 
-                            +((float)(this->encoder2_turns*4096))
-                            -((float)(4095-this->encoder2_zero))))
+                    float value = (3600
+                            *(((float)(encoder2_current_read)) 
+                            //+((float)(this->encoder2_turns*4096))
+                            -((float)(this->encoder2_zero))))
                             /(4096*MOTOR2_TRANSMISSION_RATE);
+
+                    this->encoder2_current_angle = (int32_t)value;
 
 
 
@@ -385,8 +390,8 @@ static void Motors_dispatch(Motors * const this,
                         this->centering_dir = MOTOR2_POS_DIR;
 
                         this->centering_steps = (uint16_t) 
-                                                ((-this->encoder2_current_angle
-                                                *MOTOR2_TRANSMISSION_RATE
+                                                ((-(this->encoder2_current_angle)
+                                                *(MOTOR2_TRANSMISSION_RATE)
                                                 *MOTOR2_STEPS_PER_REV)/3600);
                     }else{
                         this->centering_dir = MOTOR2_NEG_DIR;
@@ -407,7 +412,35 @@ static void Motors_dispatch(Motors * const this,
             }
             break;
         }
-    
+        case MOTORS_AO_CENTER_M2_FREE_FIX_ST:{
+            switch(e->sig){
+                case MOTORS_AO_TIMEOUT_SIG:{
+                    uint16_t read_encoder2_value = read_encoder2();
+                    if(fabs(read_encoder2_value- this->encoder2_zero)>15 &&
+                        fabs(read_encoder2_value - this->encoder2_zero)<200) {
+                            if(read_encoder2_value<this->encoder2_zero){
+
+                                StepperMotor_move(&(this->motor2), false,
+                                                    MOTOR2_CENTER_FREQ, 1);
+                            }else{
+                                StepperMotor_move(&(this->motor2), true,
+                                                    MOTOR2_CENTER_FREQ, 1);
+
+                            }
+                        
+                        TimeEvent_arm(&this->te, (10 / portTICK_RATE_MS), 0U);
+
+                    }else{
+                        this->state = MOTORS_AO_WAITING_ST;
+                        this->past_state = MOTORS_AO_CENTER_M2_ST;
+                        TRIGGER_VOID_EVENT;
+                    }
+                    break;
+                }default:
+                    break;
+            }
+            break;
+        }
         case MOTORS_AO_WAITING_ST:{
             switch(e->sig){
                 case MOTORS_AO_TIMEOUT_SIG:

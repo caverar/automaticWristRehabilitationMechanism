@@ -148,6 +148,7 @@ typedef enum {
 
     MOTORS_AO_CENTER_M1_ST,
     MOTORS_AO_CENTER_M2_ST,
+    MOTORS_AO_CENTER_M2_FREE_FIX_ST,
 
     MOTORS_AO_FREE_M1_ST,
     MOTORS_AO_FREE_M2_ST,
@@ -166,6 +167,7 @@ typedef enum {
 typedef enum {
     CENTER_M2_PENDING_ST,
     CENTER_M2_DONE_ST
+    
 }Motors_AO_Center_M2_ST_state;
 
 /* AO Class Data -------------------------------------------------------------*/

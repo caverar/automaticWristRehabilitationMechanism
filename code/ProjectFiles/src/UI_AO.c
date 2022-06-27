@@ -90,13 +90,13 @@ char error_message2[20];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {1, 2, -400, 200, 2};
-Exercise default_exercise_2 = {0, 2, -830, 600, 2};
-// Exercise default_exercise_3 = {2, 2, -300, 400, 2};
-// Exercise default_exercise_4 = {1, 2, -400, 200, 2};
-// Exercise default_exercise_5 = {0, 2, -800, 600, 2};
-// Exercise default_exercise_6 = {2, 2, -300, 400, 2};
-// Exercise default_exercise_7 = {0, 2, -300, 400, 2};
+Exercise default_exercise_1 = {0, 2, -450, 450, 2};
+Exercise default_exercise_2 = {1, 2, -600, 600, 2};
+Exercise default_exercise_3 = {2, 2, -300, 300, 2};
+Exercise default_exercise_4 = {1, 2, -400, 400, 2};
+Exercise default_exercise_5 = {0, 2, -600, 600, 2};
+Exercise default_exercise_6 = {2, 2, -450, 450, 2};
+Exercise default_exercise_7 = {0, 2, -300, 300, 2};
 
 //Selected routine. 0: default routine, 1: created routine
 int8_t selected_routine = 0;
@@ -164,15 +164,15 @@ void UI_ctor(UI * const this){
     created_routine.pause = this->pause_between_exercises;
 
     //initial parameters for default routine
-    default_routine.num_ejercicios = 2;
+    default_routine.num_ejercicios = 7;
     default_routine.pause = this->pause_between_exercises;
     default_routine.ejercicios[0] = default_exercise_1;
     default_routine.ejercicios[1] = default_exercise_2;
-    // default_routine.ejercicios[2] = default_exercise_3;
-    // default_routine.ejercicios[3] = default_exercise_4;
-    // default_routine.ejercicios[4] = default_exercise_5;
-    // default_routine.ejercicios[5] = default_exercise_6;
-    // default_routine.ejercicios[6] = default_exercise_7;   
+    default_routine.ejercicios[2] = default_exercise_3;
+    default_routine.ejercicios[3] = default_exercise_4;
+    default_routine.ejercicios[4] = default_exercise_5;
+    default_routine.ejercicios[5] = default_exercise_6;
+    default_routine.ejercicios[6] = default_exercise_7;   
         
 }
 
@@ -1133,13 +1133,13 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                                 static MOTORS_AO_MOVE_PL max_angle_M2_movement_event = {MOTORS_AO_MOVE_SIG,M2};
                                 max_angle_M2_movement_event.degrees = degrees_to_send;
                                 Active_post(AO_Motors, (Event*)&max_angle_M2_movement_event);
-                                display_row2("Motor aro, max angle");                                
+                                display_row2("          Max. Angle");                                
                             }
                             else{
                                 static MOTORS_AO_MOVE_PL max_angle_M1_movement_event = {MOTORS_AO_MOVE_SIG, M1};
                                 max_angle_M1_movement_event.degrees = degrees_to_send;
                                 Active_post(AO_Motors, (Event*)&max_angle_M1_movement_event);                                
-                                display_row2("Motor base max angle");
+                                display_row2("          Min. Angle");
 
                             } 
                             inicio = false;

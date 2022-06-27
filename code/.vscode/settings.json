@@ -31,7 +31,11 @@
         "blinky_ao.h": "c",
         "motors_ao.h": "c",
         "limits": "c",
-        "pio_stepper.h": "c"
+        "pio_stepper.h": "c",
+        "cmath": "c",
+        "*.tcc": "c",
+        "cinttypes": "c",
+        "cstdlib": "c"
     },
     "cortex-debug.showRTOS": false,
     "cmake.sourceDirectory": "${workspaceFolder}/.",
