@@ -90,12 +90,12 @@ char error_message2[20];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {0, 3, -400, 400, 3};
+Exercise default_exercise_1 = {1, 3, -400, 400, 3};
 Exercise default_exercise_2 = {1, 3, -400, 400, 3};
 Exercise default_exercise_3 = {2, 3, -400, 400, 3};
 
 //Selected routine. 0: default routine, 1: created routine
-uint selected_routine = 0;
+int8_t selected_routine = 0;
 
 //number of exercise to see or execute
 uint selected_exercise = 0;
@@ -198,9 +198,11 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     pause_active = true;
                 }
                 else{
-                    this->state = UI_AO_CENTER_DEVICE_ST;
-                    TRIGGER_VOID_EVENT;
+                    this->state = UI_AO_END_OF_REPETITION_ST;
                     pause_active = false;
+                    current_repetition--;
+                    TRIGGER_VOID_EVENT;
+                    
                 }
             }
         }
@@ -221,6 +223,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         this->state = UI_AO_REMOVE_HANDS_ST;
                         display_row2(HOME.title);
                         TimeEvent_arm(&this->te, (2500 / portTICK_RATE_MS), 0U);
+                        inExercise = false;
                     break;
                     }default:
                         break;                
@@ -982,6 +985,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
             case UI_AO_COUNTDOWN_ST:{
                 switch(e->sig){
                     case UI_AO_TIMEOUT_SIG:{
+                        inExercise = true;
                         if(counter == 0){
                             change_string(modified_buffer, 0, "GO!");
                             display_row4(modified_buffer);
@@ -1008,7 +1012,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         display_rows("      Centering     ", "       device       ", "                    ", "                    ");
                         static MOTORS_AO_MOVE_PL center_movement_event = {MOTORS_AO_MOVE_SIG, M1, 0};
                         Active_post(AO_Motors, (Event*)&center_movement_event);                     
-                        inExercise = true;
+                        
                     break;
                     }
                     case UI_AO_ACK_MOVE_SIG:{
@@ -1175,8 +1179,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             current_repetition = 0;
                             counter = routine_to_do.pause;
                             this->state = UI_AO_CENTER_DEVICE_ST;
-                            TRIGGER_VOID_EVENT;
-                            
+                            TRIGGER_VOID_EVENT;                            
                         }
                         else{
                             display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "    See you soon    ");
