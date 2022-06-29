@@ -1077,14 +1077,14 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                                 static MOTORS_AO_MOVE_PL min_angle_M2_movement_event = {MOTORS_AO_MOVE_SIG, M2};
                                 min_angle_M2_movement_event.degrees = degrees_to_send;
                                 Active_post(AO_Motors, (Event*)&min_angle_M2_movement_event);
-                                display_row2("Motor aro, min angle");
+                                display_row2("Min. Angle          ");
 
                             }
                             else{
                                 static MOTORS_AO_MOVE_PL min_angle_M1_movement_event = {MOTORS_AO_MOVE_SIG, M1};
                                 min_angle_M1_movement_event.degrees = degrees_to_send;
                                 Active_post(AO_Motors, (Event*)&min_angle_M1_movement_event);
-                                display_row2("Motor base min angle");
+                                display_row2("Min. Angle          ");
 
                             }
                             change_string(modified_buffer, 0, "Current rep.: ");
@@ -1133,13 +1133,13 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                                 static MOTORS_AO_MOVE_PL max_angle_M2_movement_event = {MOTORS_AO_MOVE_SIG,M2};
                                 max_angle_M2_movement_event.degrees = degrees_to_send;
                                 Active_post(AO_Motors, (Event*)&max_angle_M2_movement_event);
-                                display_row2("          Max. Angle");                                
+                                display_row2("Max. Angle          ");                                
                             }
                             else{
                                 static MOTORS_AO_MOVE_PL max_angle_M1_movement_event = {MOTORS_AO_MOVE_SIG, M1};
                                 max_angle_M1_movement_event.degrees = degrees_to_send;
                                 Active_post(AO_Motors, (Event*)&max_angle_M1_movement_event);                                
-                                display_row2("          Min. Angle");
+                                display_row2("Max. Angle          ");
 
                             } 
                             inicio = false;

@@ -31,6 +31,7 @@
 #include "pio_stepper.h"
 #include "AS5600.h"
 
+int16_t offset = 0;
 
 #define TRIGGER_VOID_EVENT TimeEvent_arm(&this->te, (1 / portTICK_RATE_MS), 0U)
 
@@ -205,7 +206,7 @@ static void Motors_dispatch(Motors * const this,
 
                     }else if(this->center_m2_state == CENTER_M2_DONE_ST){
                         if(this->past_state == MOTORS_AO_CALIB_M2_ST){
-                            this->encoder2_zero = read_encoder2();
+                            this->encoder2_zero = read_encoder2() + offset;
                             this->encoder2_last_read = this->encoder2_zero;
                             static const Event calibration_ack = {UI_AO_ACK_CALIB_SIG};
                             Active_post(AO_UI, (Event*)&calibration_ack);
@@ -331,7 +332,7 @@ static void Motors_dispatch(Motors * const this,
                 case MOTORS_AO_TIMEOUT_SIG:{
                     StepperMotor_disable(&(this->motor2));
 
-                    uint16_t encoder2_current_read = read_encoder2();
+                    uint16_t encoder2_current_read = read_encoder2() + offset;
                         // Identify overflow
                     if(encoder2_current_read  >= 0 && 
                        encoder2_current_read < 500 && 
@@ -415,7 +416,7 @@ static void Motors_dispatch(Motors * const this,
         case MOTORS_AO_CENTER_M2_FREE_FIX_ST:{
             switch(e->sig){
                 case MOTORS_AO_TIMEOUT_SIG:{
-                    uint16_t read_encoder2_value = read_encoder2();
+                    uint16_t read_encoder2_value = read_encoder2() + offset;
                     if(fabs(read_encoder2_value- this->encoder2_zero)>15 &&
                         fabs(read_encoder2_value - this->encoder2_zero)<200) {
                             if(read_encoder2_value<this->encoder2_zero){

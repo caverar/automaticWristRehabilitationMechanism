@@ -60,28 +60,28 @@ extern Active *AO_blinkyButton;
 #define MOTOR1_CALIB_FREQ 250
 #define MOTOR1_CALIB_STEPS 1
 
-#define MOTOR2_CALIB_FREQ 250
+#define MOTOR2_CALIB_FREQ 25
 #define MOTOR2_CALIB_STEPS 1
 
 #define MOTOR1_CENTER_FREQ 50
 #define MOTOR1_CENTER_STEPS 2
 
-#define MOTOR2_CENTER_FREQ 50
-#define MOTOR2_CENTER_STEPS 2
+#define MOTOR2_CENTER_FREQ 25
+#define MOTOR2_CENTER_STEPS 1
 
 #define MOTOR1_MOVEMENT_FREQ 50
 #define MOTOR1_MOVEMENT_STEPS 2
 
-#define MOTOR2_MOVEMENT_FREQ 50
-#define MOTOR2_MOVEMENT_STEPS 2
+#define MOTOR2_MOVEMENT_FREQ 25
+#define MOTOR2_MOVEMENT_STEPS 1
 
 
 #define MOTOR2_DEG_RANGE [-90, 90]
 #define MOTOR2_DEG_RANGE_LEN 180
 #define MOTOR2_TRANSMISSION_RATE 1
-#define MOTOR2_STEPS_PER_REV 400
-#define MOTOR2_FULL_RANGE_STEPS 200     // NUmber of steps in valid range
-#define MOTOR2_HOME_TO_CENTER_STEPS 114
+#define MOTOR2_STEPS_PER_REV 200
+#define MOTOR2_FULL_RANGE_STEPS 100     // NUmber of steps in valid range
+#define MOTOR2_HOME_TO_CENTER_STEPS 57
 #define MOTOR2_DEG_PER_STEP (float)(360/(MOTOR2_TRANSMISSION_RATE*MOTOR2_STEPS_PER_REV))
 #define MOTOR2_STEPS_PER_DEG (float)((MOTOR2_TRANSMISSION_RATE*MOTOR2_STEPS_PER_REV)/360)
 
@@ -181,8 +181,8 @@ typedef struct{
     Motors_AO_Center_M1_ST_state center_m1_state; 
     Motors_AO_Center_M2_ST_state center_m2_state; 
 
-    uint16_t encoder1_zero;
-    uint16_t encoder2_zero;
+    uint32_t encoder1_zero;
+    uint32_t encoder2_zero;
 
     int32_t encoder1_current_angle;
     int32_t encoder2_current_angle;
