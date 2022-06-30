@@ -90,13 +90,13 @@ char error_message2[20];
 bool pause_active = false;
 
 //Exercises for default routine:
-Exercise default_exercise_1 = {0, 2, -450, 450, 2};
-Exercise default_exercise_2 = {1, 2, -600, 600, 2};
-Exercise default_exercise_3 = {2, 2, -300, 300, 2};
-Exercise default_exercise_4 = {1, 2, -400, 400, 2};
-Exercise default_exercise_5 = {0, 2, -600, 600, 2};
-Exercise default_exercise_6 = {2, 2, -450, 450, 2};
-Exercise default_exercise_7 = {0, 2, -300, 300, 2};
+Exercise default_exercise_1 = {0, 2, -450, 450, 3};
+Exercise default_exercise_2 = {1, 2, -600, 600, 3};
+Exercise default_exercise_3 = {2, 2, -300, 300, 3};
+Exercise default_exercise_4 = {1, 2, -400, 400, 3};
+Exercise default_exercise_5 = {0, 2, -600, 600, 3};
+Exercise default_exercise_6 = {2, 2, -450, 450, 3};
+Exercise default_exercise_7 = {0, 2, -300, 300, 3};
 
 //Selected routine. 0: default routine, 1: created routine
 int8_t selected_routine = 0;
@@ -1263,8 +1263,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     }
                     case UI_AO_ACK_MOVE_SIG:{                                              
                         display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "                    ");
-                        this->state = UI_AO_INICIO_ST;
-                        TimeEvent_arm(&this->te, (2000/ portTICK_RATE_MS), 0U);
+                        //this->state = UI_AO_INICIO_ST;
+                        //TimeEvent_arm(&this->te, (2000/ portTICK_RATE_MS), 0U);
 
                     break;
                     }                     
