@@ -72,12 +72,16 @@ char availableExercises[3][12] = {"PronoSup.", "FlexoExt.", "Ab-,Adduc."};
 int8_t prev_reps;
 int8_t prev_time;
 int8_t prev_pause;
+int16_t prev_max_angle;
+int16_t prev_min_angle;
 
 //new angle from encoder
 int16_t new_angle = 5;
 
 //counter
 int8_t counter = 3;
+
+int8_t delta_angle = 20;
 
 //used to save numerical value in char value
 char char_data[3];
@@ -96,7 +100,7 @@ Exercise default_exercise_3 = {2, 2, -300, 300, 3};
 Exercise default_exercise_4 = {1, 2, -400, 400, 3};
 Exercise default_exercise_5 = {0, 2, -600, 600, 3};
 Exercise default_exercise_6 = {2, 2, -450, 450, 3};
-Exercise default_exercise_7 = {0, 2, -300, 300, 3};
+Exercise default_exercise_7 = {0, 2, -600, 600, 3};
 
 //Selected routine. 0: default routine, 1: created routine
 int8_t selected_routine = 0;
@@ -206,6 +210,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                 }
                 else{
                     this->state = UI_AO_END_OF_REPETITION_ST;
+                    display_row1("Resuming            ");
+                    display_row2("from pause...       ");
                     pause_active = false;
                     current_repetition--;
                     TRIGGER_VOID_EVENT;
@@ -245,6 +251,7 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                             display_row4(modified_buffer);
                             counter = 3;
                             this->state = UI_AO_CALIBRATE_ST;
+                            //this->state = UI_AO_INICIO_ST;
                             TimeEvent_arm(&this->te, (1500 / portTICK_RATE_MS), 0U);
                         }
                         else{
@@ -465,12 +472,13 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     
                     case UI_AO_TIMEOUT_SIG:{
                         if(this->exercise_type == 0 || this-> exercise_type == 1){
-
+                            printf("Sending signal to motors ex. 0 y 1");
                             static MOTORS_AO_MOVE_PL vertical_movement_event = {MOTORS_AO_MOVE_SIG, M2, 0};
                             Active_post(AO_Motors, (Event*)&vertical_movement_event);
                             display_rows("    Positioning     ", "        bar         ", "     vertically     ", "                    ");
                         }                        
                         else if(this->exercise_type == 2){
+                            printf("Sending signal to motors ex. 2");
                             static MOTORS_AO_MOVE_PL horizontal_movement_event = {MOTORS_AO_MOVE_SIG, M2, -900};
                             Active_post(AO_Motors, (Event*)&horizontal_movement_event);
                             display_rows("    Positioning     ", "         bar        ", "    horizontally    ", "                    ");
@@ -479,7 +487,12 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     }                      
                     case UI_AO_ACK_MOVE_SIG:{
                         printf("ACK move from motors received\n");
-                        this->state = UI_AO_MEASURE_ANGLE_ST;
+                        if(angle == 0){
+                            this->state = UI_AO_SET_MIN_ANGLE_ST;
+                        }
+                        else{
+                            this->state = UI_AO_SET_MAX_ANGLE_ST;
+                        }
                         TRIGGER_VOID_EVENT; 
                         break;
                     }  
@@ -487,6 +500,106 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                         break;
                 }
             break;
+            }
+            case UI_AO_SET_MAX_ANGLE_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{                        
+                        prev_max_angle = this->max_angle;
+                        sprintf(char_data,"%ld", this->max_angle/10);
+                        change_string(modified_buffer, 0, char_data);
+                        display_rows("  Set max. angle:   ", "--------------------", "                    ", modified_buffer);                       
+                    break;
+                    }
+                    case UI_AO_SW3_PRESSED_SIG:{
+                        if(this->max_angle < 900){
+                            this->max_angle+= delta_angle;
+                            sprintf(char_data,"%ld", this->max_angle/10);
+                            change_string(modified_buffer, 0, char_data);
+                            display_row4(modified_buffer);                            
+                        }                       
+                                           
+                    break;
+                    }
+                    case UI_AO_SW2_PRESSED_SIG:{
+                        if(this->max_angle > -900){
+                            this->max_angle-= delta_angle;
+                            sprintf(char_data,"%ld", this->max_angle/10);
+                            change_string(modified_buffer, 0, char_data);
+                            display_row4(modified_buffer);
+                        }                       
+                                           
+                    break;
+                    }
+                    case UI_AO_SW4_PRESSED_SIG:{
+                        sprintf(char_data,"%ld", this->max_angle/10);
+                        change_string(CONFIG_EXERCISE.options[2], 13, char_data);
+                        i = 0;
+                        this->state = UI_AO_CONFIG_EXERCISE_ST; 
+                        TRIGGER_VOID_EVENT;                                           
+                    break;
+                    }               
+                    case UI_AO_SW1_PRESSED_SIG:{
+                        this->max_angle = prev_max_angle;
+                        this->state = UI_AO_CONFIG_EXERCISE_ST;               
+                        i = 0;
+                        TRIGGER_VOID_EVENT;                                           
+                    break;
+                    }
+                    default:
+                        break;
+                }
+            break;
+
+            }
+            case UI_AO_SET_MIN_ANGLE_ST:{
+                switch(e->sig){
+                    case UI_AO_TIMEOUT_SIG:{                        
+                        prev_min_angle = this->min_angle;
+                        sprintf(char_data,"%ld", this->min_angle/10);
+                        change_string(modified_buffer, 0, char_data);
+                        display_rows("  Set min. angle:   ", "--------------------", "                    ", modified_buffer);                       
+                    break;
+                    }
+                    case UI_AO_SW3_PRESSED_SIG:{
+                        if(this->min_angle < 900){
+                            this->min_angle+=delta_angle;
+                            sprintf(char_data,"%ld", this->min_angle/10);
+                            change_string(modified_buffer, 0, char_data);
+                            display_row4(modified_buffer);                            
+                        }                      
+                                           
+                    break;
+                    }
+                    case UI_AO_SW2_PRESSED_SIG:{
+                        if(this->min_angle > -900){
+                            this->min_angle-=delta_angle;
+                            sprintf(char_data,"%ld", this->min_angle/10);
+                            change_string(modified_buffer, 0, char_data);
+                            display_row4(modified_buffer);
+                        }                       
+                                           
+                    break;
+                    }
+                    case UI_AO_SW4_PRESSED_SIG:{
+                        sprintf(char_data,"%ld", this->min_angle/10);
+                        change_string(CONFIG_EXERCISE.options[1], 13, char_data);
+                        i = 0;
+                        this->state = UI_AO_CONFIG_EXERCISE_ST; 
+                        TRIGGER_VOID_EVENT;                                           
+                    break;
+                    }               
+                    case UI_AO_SW1_PRESSED_SIG:{
+                        this->min_angle = prev_min_angle;
+                        this->state = UI_AO_CONFIG_EXERCISE_ST;               
+                        i = 0;
+                        TRIGGER_VOID_EVENT;                                           
+                    break;
+                    }
+                    default:
+                        break;
+                }
+            break;
+
             }
             case UI_AO_MEASURE_ANGLE_ST:{             
                 
@@ -1263,8 +1376,8 @@ static void UI_dispatch(UI * const this, //dispatch se ejecuta siempre
                     }
                     case UI_AO_ACK_MOVE_SIG:{                                              
                         display_rows("   End of routine   ", "                    ", "   Well done!  :D   ", "                    ");
-                        //this->state = UI_AO_INICIO_ST;
-                        //TimeEvent_arm(&this->te, (2000/ portTICK_RATE_MS), 0U);
+                        this->state = UI_AO_INICIO_ST;
+                        TimeEvent_arm(&this->te, (2000/ portTICK_RATE_MS), 0U);
 
                     break;
                     }                     

@@ -44,6 +44,8 @@ void Motors_ctor(Motors * const this){
     // State Machine initialization
     this->state = MOTORS_AO_CALIB_M1_ST;
     this->past_state = MOTORS_AO_CALIB_M1_ST;
+    //this->state = MOTORS_AO_WAITING_ST;
+    //this->past_state = MOTORS_AO_WAITING_ST;
 
     this->center_m1_state = CENTER_M1_PENDING_ST; 
     this->center_m2_state = CENTER_M2_PENDING_ST; 
@@ -449,7 +451,7 @@ static void Motors_dispatch(Motors * const this,
 
                 case MOTORS_AO_MOVE_SIG:{   // TODO: Motion profile precalculation
                     int16_t deg_to_move = 0;                    
-                    
+                    printf("REceiving signal from Ui. I am motors");
                     if(((MOTORS_AO_MOVE_PL*)e)->motor == M1){
                         deg_to_move = -this->motor1_current_position + ((MOTORS_AO_MOVE_PL*)e)->degrees; 
                         if(deg_to_move<0){

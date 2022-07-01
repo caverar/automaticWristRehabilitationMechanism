@@ -138,7 +138,9 @@ typedef struct {
         UI_AO_FINISH_ST,
         UI_AO_ERROR_ST,
         UI_AO_END1_ST,
-        UI_AO_END2_ST
+        UI_AO_END2_ST,
+        UI_AO_SET_MAX_ANGLE_ST,
+        UI_AO_SET_MIN_ANGLE_ST
     }state;
 
         // default values
